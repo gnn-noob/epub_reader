@@ -102,14 +102,12 @@ mark.hl{background:var(--hl);border-radius:2px;}
   <button class="ib" id="mFont" style="width:100%;border-radius:0;border:none;justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">Аа Шрифт</button>
 </div>
 
-<!-- Bookmarks panel -->
 <div id="bmPanel" class="fp">
   <div class="ph">🔖 Отметки <button class="ib" id="bmX" style="height:36px;min-width:36px">✕</button></div>
   <div id="bmList"><div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Все още няма отметки.</div></div>
   <div class="pf2"><button class="ib ibp" style="width:100%;min-height:44px" id="bmAdd">🔖 Добави на позицията</button></div>
 </div>
 
-<!-- Notes panel -->
 <div id="ntPanel" class="fp">
   <div class="ph">📝 Бележки <button class="ib" id="ntX" style="height:36px;min-width:36px">✕</button></div>
   <div class="pf2" style="border-top:none;border-bottom:1px solid var(--bd)">
@@ -119,7 +117,6 @@ mark.hl{background:var(--hl);border-radius:2px;}
   <div id="ntList"></div>
 </div>
 
-<!-- Font panel -->
 <div id="fontPanel" class="fp">
   <div class="ph">Аа Шрифт и изглед <button class="ib" id="fontX" style="height:36px;min-width:36px">✕</button></div>
   <div class="frow">
@@ -209,18 +206,16 @@ const S={
   cur:0,scale:1,lineHeight:1.85,
   readFont:"Georgia,'Times New Roman',serif",readWidth:'680px',
   theme:window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light',
-  cache:new Map(),bm:[],notes:{},swipeHinted:false,bookKey:''
+  cache:new Map(),bm:[],notes:{},swipeHinted:false,bookKey:'',pendingSel:null
 };
 const reader=document.getElementById('reader'),chapter=document.getElementById('chapter');
 const MOBILE=()=>window.innerWidth<=700;
 
-/* ── localStorage helpers ── */
 const LS={
   get(k,fb=null){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):fb;}catch{return fb;}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 };
 
-/* ── persist ── */
 function saveGlobal(){
   LS.set('ep11th',S.theme);LS.set('ep11sc',S.scale);LS.set('ep11lh',S.lineHeight);
   LS.set('ep11rf',S.readFont);LS.set('ep11rw',S.readWidth);
@@ -242,7 +237,6 @@ function loadGlobal(){
 }
 loadGlobal();
 
-/* auto-save position while scrolling */
 let _saveTimer=null;
 reader.addEventListener('scroll',()=>{
   const max=reader.scrollHeight-reader.clientHeight;
@@ -250,12 +244,10 @@ reader.addEventListener('scroll',()=>{
   clearTimeout(_saveTimer);_saveTimer=setTimeout(savePosition,800);
 },{passive:true});
 
-/* ── theme ── */
 applyTheme();
 function applyTheme(){document.documentElement.setAttribute('data-theme',S.theme);document.getElementById('bTheme').textContent=S.theme==='dark'?'☀️':'🌙';}
 document.getElementById('bTheme').addEventListener('click',()=>{S.theme=S.theme==='dark'?'light':'dark';applyTheme();saveGlobal();});
 
-/* ── typography ── */
 applyTypo();
 function applyTypo(){
   chapter.style.fontFamily=S.readFont;
@@ -274,10 +266,8 @@ document.getElementById('lwSlider').addEventListener('input',e=>{S.lineHeight=pa
 document.getElementById('fontOpts').addEventListener('click',e=>{const b=e.target.closest('.fb[data-font]');if(!b)return;S.readFont=b.dataset.font;applyTypo();saveGlobal();toast('Шрифт: '+b.textContent);});
 document.querySelectorAll('.fb[data-rw]').forEach(b=>b.addEventListener('click',()=>{S.readWidth=b.dataset.rw;applyTypo();saveGlobal();toast('Ширина: '+b.textContent);}));
 
-/* ── toast ── */
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2400);}
 
-/* ── keyboard ── */
 window.addEventListener('keydown',e=>{
   if(e.target.matches('input,textarea,select'))return;
   if(e.key==='ArrowDown'){e.preventDefault();if(reader.scrollTop+reader.clientHeight>=reader.scrollHeight-2)gotoChapter(S.cur+1);else reader.scrollBy({top:110,behavior:'smooth'});return;}
@@ -287,13 +277,11 @@ window.addEventListener('keydown',e=>{
 });
 reader.addEventListener('click',()=>reader.focus({preventScroll:true}));
 
-/* ── swipe ── */
 let _tx=0,_ty=0,_sw=false;
 reader.addEventListener('touchstart',e=>{_tx=e.touches[0].clientX;_ty=e.touches[0].clientY;_sw=false;},{passive:true});
 reader.addEventListener('touchmove',e=>{const dx=Math.abs(e.touches[0].clientX-_tx),dy=Math.abs(e.touches[0].clientY-_ty);if(dx>18&&dx>dy*1.8)_sw=true;},{passive:true});
 reader.addEventListener('touchend',e=>{if(!_sw)return;const dx=e.changedTouches[0].clientX-_tx,dy=Math.abs(e.changedTouches[0].clientY-_ty);if(Math.abs(dx)>60&&Math.abs(dx)>dy*1.5){dx<0?gotoChapter(S.cur+1):gotoChapter(S.cur-1);}_sw=false;},{passive:true});
 
-/* ── sidebar ── */
 let sopen=false;
 function updateSidebar(){const mob=MOBILE(),sb=document.getElementById('sidebar'),ov=document.getElementById('sOverlay');if(mob){sb.classList.toggle('open',sopen);sb.classList.remove('off');ov.classList.toggle('show',sopen);}else{sb.classList.toggle('off',!sopen);sb.classList.remove('open');ov.classList.remove('show');}}
 window.addEventListener('DOMContentLoaded',()=>{sopen=!MOBILE();updateSidebar();applyTypo();});
@@ -301,11 +289,25 @@ window.addEventListener('resize',()=>{sopen=!MOBILE();updateSidebar();});
 document.getElementById('bSidebar').addEventListener('click',()=>{sopen=!sopen;updateSidebar();});
 document.getElementById('sOverlay').addEventListener('click',()=>{sopen=false;updateSidebar();});
 
-/* ── panels ── */
 function closePanels(){document.querySelectorAll('.fp').forEach(p=>p.classList.remove('open'));}
+
 ['bBm','bmX','bNotes','ntX','bFont','fontX'].forEach(id=>{
   document.getElementById(id).addEventListener('click',()=>{
     if(['bmX','ntX','fontX'].includes(id)){closePanels();return;}
+    if(id==='bBm'){
+      const sel=window.getSelection();
+      if(sel&&sel.rangeCount>0&&sel.toString().trim()){
+        const range=sel.getRangeAt(0);
+        S.pendingSel={
+          snippet:sel.toString().trim().slice(0,120),
+          selOff:range.startOffset,
+          xpath:(()=>{try{
+            function getXP(node){const parts=[];while(node&&node!==chapter){if(node.nodeType===1){let n=1,s=node;while((s=s.previousElementSibling))n++;parts.unshift(node.tagName.toLowerCase()+'['+n+']');}else if(node.nodeType===3){let n=1,s=node;while((s=s.previousSibling)&&s.nodeType===3)n++;parts.unshift('text()['+n+']');}node=node.parentNode;}return parts.join('/');}
+            return getXP(range.startContainer);
+          }catch(e){return ''}})()
+        };
+      }else{S.pendingSel=null;}
+    }
     const map={bBm:'bmPanel',bNotes:'ntPanel',bFont:'fontPanel'};
     const p=document.getElementById(map[id]);
     const w=p.classList.contains('open');closePanels();
@@ -313,24 +315,18 @@ function closePanels(){document.querySelectorAll('.fp').forEach(p=>p.classList.r
   });
 });
 
-/* ── more menu (mobile) ── */
 const moreMenu=document.getElementById('moreMenu');
 document.getElementById('bMore').addEventListener('click',e=>{e.stopPropagation();moreMenu.style.display=moreMenu.style.display==='none'?'block':'none';});
 document.addEventListener('click',e=>{if(!moreMenu.contains(e.target)&&e.target.id!=='bMore')moreMenu.style.display='none';});
 ['mBm','mNotes','mFont'].forEach(id=>{document.getElementById(id).addEventListener('click',()=>{moreMenu.style.display='none';const map={mBm:'bBm',mNotes:'bNotes',mFont:'bFont'};document.getElementById(map[id]).click();});});
 
-/* ── bookmarks (with text selection) ── */
 document.getElementById('bmAdd').addEventListener('click',()=>{
   if(!S.spine.length)return;
   const lbl=S.toc[S.cur]?.label||'Глава '+(S.cur+1);
-  const sel=window.getSelection();
-  let snippet='',xpath='',selOff=0;
-  if(sel&&sel.rangeCount>0&&sel.toString().trim()){
-    snippet=sel.toString().trim().slice(0,120);
-    const range=sel.getRangeAt(0);selOff=range.startOffset;
-    function getXP(node){const parts=[];while(node&&node!==chapter){if(node.nodeType===1){let n=1,s=node;while((s=s.previousElementSibling))n++;parts.unshift(node.tagName.toLowerCase()+'['+n+']');}else if(node.nodeType===3){let n=1,s=node;while((s=s.previousSibling)&&s.nodeType===3)n++;parts.unshift('text()['+n+']');}node=node.parentNode;}return parts.join('/');}
-    try{xpath=getXP(range.startContainer);}catch(e){}
-  }
+  const _ps=S.pendingSel||null;
+  const snippet=_ps?_ps.snippet:'';
+  const xpath=_ps?_ps.xpath:'';
+  const selOff=_ps?_ps.selOff:0;
   const entry={id:Date.now(),i:S.cur,l:lbl,bk:S.bookKey,snippet,xpath,selOff,st:reader.scrollTop};
   S.bm.push(entry);saveGlobal();renderBm();
   toast(snippet?'Отметка: "'+snippet.slice(0,30)+'…" 🔖':'Отметка на '+lbl+' 🔖');
@@ -390,7 +386,6 @@ async function jumpToBm(b){
   if(b.st)reader.scrollTop=b.st;
 }
 
-/* ── notes ── */
 document.getElementById('ntSave').addEventListener('click',()=>{
   const t=document.getElementById('ntA').value.trim();if(!t)return;
   if(!S.notes[S.cur])S.notes[S.cur]=[];
@@ -415,7 +410,6 @@ function renderNt(){
   });
 }
 
-/* ── search ── */
 document.getElementById('sSrch').addEventListener('click',doSearch);
 document.getElementById('si').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 document.getElementById('sClr').addEventListener('click',()=>{document.getElementById('si').value='';document.getElementById('sClr').style.display='none';clearHL();});
@@ -423,21 +417,17 @@ function doSearch(){const q=document.getElementById('si').value.trim();document.
 function clearHL(){chapter.querySelectorAll('mark.hl').forEach(m=>{m.parentNode.replaceChild(document.createTextNode(m.textContent),m);m.parentNode.normalize();});}
 function hlText(root,q){let n=0;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(w.nextNode())nodes.push(w.currentNode);const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');nodes.forEach(node=>{const t=node.textContent;if(!re.test(t))return;re.lastIndex=0;const f=document.createDocumentFragment();let l=0,m;while((m=re.exec(t))!==null){f.appendChild(document.createTextNode(t.slice(l,m.index)));const mk=document.createElement('mark');mk.className='hl';mk.textContent=m[0];f.appendChild(mk);l=m.index+m[0].length;n++;}f.appendChild(document.createTextNode(t.slice(l)));node.parentNode.replaceChild(f,node);});return n;}
 
-/* ── nav ── */
 document.getElementById('bPrevCh').addEventListener('click',()=>gotoChapter(S.cur-1));
 document.getElementById('bNextCh').addEventListener('click',()=>gotoChapter(S.cur+1));
 
-/* ── swipe hint ── */
 function showSwipeHint(){if(S.swipeHinted||!MOBILE())return;const h=document.getElementById('swipeHint');h.classList.add('show');setTimeout(()=>{h.classList.remove('show');S.swipeHinted=true;saveGlobal();},2800);}
 
-/* ── drag & drop ── */
 reader.addEventListener('dragover',e=>{e.preventDefault();document.getElementById('dz').classList.add('drag');});
 reader.addEventListener('dragleave',()=>document.getElementById('dz').classList.remove('drag'));
 reader.addEventListener('drop',async e=>{e.preventDefault();document.getElementById('dz').classList.remove('drag');const f=e.dataTransfer.files?.[0];if(f&&f.name.endsWith('.epub'))await openEpub(f);});
 document.getElementById('dz').addEventListener('click',()=>document.getElementById('epubFile').click());
 document.getElementById('epubFile').addEventListener('change',async e=>{const f=e.target.files?.[0];if(f)await openEpub(f);});
 
-/* ── open epub ── */
 async function openEpub(file){
   if(!window.JSZip){toast('JSZip не е заредена.');return;}
   toast('Зареждане…');
@@ -448,10 +438,8 @@ async function openEpub(file){
     S.opfPath=rf.getAttribute('full-path');S.rootPath=dn(S.opfPath);
     const opf=pxml(await zt(S.opfPath));
     parseMeta(opf);parseSpine(opf);prepToc(opf);
-    /* stable book key via hash */
     (function(){let h=0,s=S.meta.title+'|'+S.meta.author;for(let i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}S.bookKey='bk'+(h>>>0).toString(36);})();
     document.getElementById('es').style.display='none';
-    /* auto-restore position */
     const _pos=LS.get('ep11pos_'+S.bookKey,null);
     if(_pos&&(_pos.cur>0||_pos.st>50)){
       await gotoChapter(_pos.cur,_pos.st);
@@ -501,8 +489,15 @@ async function gotoChapter(idx,restoreScrollTop=0){
   const raw=await zt(ch.href);
   const html=await transformCh(raw,ch.href);
   clearHL();chapter.innerHTML=html;applyTypo();
-  reader.scrollTop=restoreScrollTop||0;
   document.getElementById('progFill').style.width='0';
+  if(restoreScrollTop>0){
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      reader.scrollTop=restoreScrollTop;
+      setTimeout(()=>{reader.scrollTop=restoreScrollTop;},300);
+    }));
+  }else{
+    reader.scrollTop=0;
+  }
   const lbl=S.toc[S.cur]?.label||'Глава '+(S.cur+1);
   document.getElementById('chInfo').textContent=(S.cur+1)+'/'+S.spine.length+' '+lbl;
   hlToc();reader.focus({preventScroll:true});savePosition();
