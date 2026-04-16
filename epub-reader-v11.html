@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<title>EPUB Reader v21</title>
+<title>EPUB Reader v23</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:ital,wght@0,300;0,400;1,300&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&family=Open+Sans:wght@400;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
@@ -62,7 +62,8 @@ body.page-mode #chapter{max-width:none!important;margin:0!important;column-fill:
 #chapter h1,#chapter h2,#chapter h3,#chapter h4{line-height:1.3;margin:1.5em 0 .45em;color:var(--tx);}
 #chapter h1{font-size:1.55em;}#chapter h2{font-size:1.25em;}#chapter h3{font-size:1.08em;}
 #chapter p{margin:.5em 0;}
-@media(min-width:500px){body:not(.page-mode) #chapter p{text-align:justify;}}
+/* FIX 1: Justify на ВСИЧКИ екрани — премахнато @media(min-width:500px) */
+body:not(.page-mode):not(.nojus) #chapter p{text-align:justify;}
 body.nojus #chapter p{text-align:left!important;}
 #chapter img,#chapter svg{max-width:100%;height:auto;display:block;margin:1.2em auto;border-radius:4px;}
 body.page-mode #chapter img,body.page-mode #chapter svg{max-width:100%;max-height:100%;height:auto;display:block;margin:auto;break-inside:avoid;page-break-inside:avoid;}
@@ -111,12 +112,14 @@ mark.hl{background:var(--hl);border-radius:2px;}
   <button class="ib" id="bTheme">&#127769;</button>
   <button class="ib" id="bMore" style="display:none">&#8943;</button>
 </div>
+<!-- FIX 2: Добавен бутон Цял екран в мобилното меню -->
 <div id="moreMenu">
   <button class="ib" id="mBm" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128278; Отметки</button>
   <button class="ib" id="mNotes" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128221; Бележки</button>
   <button class="ib" id="mFont" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#1040;&#1072; Шрифт</button>
   <button class="ib" id="mHist" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128218; История</button>
-  <button class="ib" id="mGS" style="width:100%;border-radius:0;border:none;justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128269; Търсене</button>
+  <button class="ib" id="mGS" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128269; Търсене</button>
+  <button class="ib" id="mFS" style="width:100%;border-radius:0;border:none;justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#x26F6; Цял екран</button>
 </div>
 <div id="bmPanel" class="fp">
   <div class="ph">&#128278; Отметки <button class="ib" id="bmX" style="height:36px;min-width:36px">&#10005;</button></div>
@@ -236,9 +239,9 @@ const GSC={};
 const reader=document.getElementById('reader');
 const chapter=document.getElementById('chapter');
 const LS={get:(k,fb=null)=>{try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):fb;}catch{return fb;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}}};
-function saveGlobal(){LS.set('e21th',S.theme);LS.set('e21sc',S.scale);LS.set('e21lh',S.lineHeight);LS.set('e21rf',S.readFont);LS.set('e21rw',S.readWidth);LS.set('e21ju',S.justify);LS.set('e21pm',S.pageMode);LS.set('e21bm',S.bm);LS.set('e21nt',S.notes);}
-function savePosition(){if(!S.bookKey)return;LS.set('e21pos_'+S.bookKey,{cur:S.cur,pg:S.pageMode?PAGE:0,st:S.pageMode?0:reader.scrollTop});}
-function loadGlobal(){S.theme=LS.get('e21th',S.theme);S.scale=LS.get('e21sc',1);S.lineHeight=LS.get('e21lh',1.85);S.readFont=LS.get('e21rf','Lora,Georgia,serif');S.readWidth=LS.get('e21rw','680px');S.justify=LS.get('e21ju',true);S.pageMode=LS.get('e21pm',false);S.bm=LS.get('e21bm',[]);S.notes=LS.get('e21nt',{});}
+function saveGlobal(){LS.set('e23th',S.theme);LS.set('e23sc',S.scale);LS.set('e23lh',S.lineHeight);LS.set('e23rf',S.readFont);LS.set('e23rw',S.readWidth);LS.set('e23ju',S.justify);LS.set('e23pm',S.pageMode);LS.set('e23bm',S.bm);LS.set('e23nt',S.notes);}
+function savePosition(){if(!S.bookKey)return;LS.set('e23pos_'+S.bookKey,{cur:S.cur,pg:S.pageMode?PAGE:0,st:S.pageMode?0:reader.scrollTop});}
+function loadGlobal(){S.theme=LS.get('e23th',S.theme);S.scale=LS.get('e23sc',1);S.lineHeight=LS.get('e23lh',1.85);S.readFont=LS.get('e23rf','Lora,Georgia,serif');S.readWidth=LS.get('e23rw','680px');S.justify=LS.get('e23ju',true);S.pageMode=LS.get('e23pm',false);S.bm=LS.get('e23bm',[]);S.notes=LS.get('e23nt',{});}
 loadGlobal();
 reader.addEventListener('scroll',()=>{if(S.pageMode)return;const mx=reader.scrollHeight-reader.clientHeight;document.getElementById('progFill').style.width=(mx>0?reader.scrollTop/mx*100:0)+'%';clearTimeout(saveTimer);saveTimer=setTimeout(savePosition,800);},{passive:true});
 function applyTheme(){document.documentElement.setAttribute('data-theme',S.theme);document.getElementById('bTheme').textContent=S.theme==='dark'?'☀️':'🌙';}
@@ -253,6 +256,17 @@ document.querySelectorAll('.fb[data-rw]').forEach(b=>b.addEventListener('click',
 document.getElementById('bJustify').addEventListener('click',()=>{S.justify=!S.justify;applyTypo();saveGlobal();});
 document.getElementById('bPageMode').addEventListener('click',()=>{S.pageMode=!S.pageMode;applyTypo();if(S.pageMode)setupPageMode();else teardownPageMode();saveGlobal();toast(S.pageMode?'Режим: Страница':'Режим: Скрол');});
 window.addEventListener('resize',()=>{sopen=window.innerWidth>700;updSB();if(S.pageMode)setupPageMode();});
+/* FIX 2: Fullscreen логика */
+function updFsBtn(){const btn=document.getElementById('mFS');if(!btn)return;const isFs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);btn.textContent=isFs?'⛶ Изход от цял екран':'⛶ Цял екран';}
+document.addEventListener('fullscreenchange',updFsBtn);
+document.addEventListener('webkitfullscreenchange',updFsBtn);
+document.addEventListener('mozfullscreenchange',updFsBtn);
+document.getElementById('mFS').addEventListener('click',()=>{
+  moreMenu.style.display='none';
+  const isFs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);
+  if(isFs){const ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;if(ex)ex.call(document);}
+  else{const el=document.documentElement;const rq=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;if(rq)rq.call(el).catch(()=>toast('Fullscreen не е разрешен'));else toast('Fullscreen не се поддържа');}
+});
 function setupPageMode(){
   if(!S.pageMode)return;
   reader.style.overflowY='hidden';reader.style.overflowX='hidden';reader.style.padding='0';
@@ -264,7 +278,6 @@ function setupPageMode(){
     const PAD=Math.round(Math.min(Math.max(W*0.06,14),48));
     inner.style.cssText=`padding:${PAD*1.2}px ${PAD}px;box-sizing:border-box;`;
     inner.innerHTML=chapter.innerHTML;
-    /* Wrap самостоятелни изображения в .img-page за цял екран */
     inner.querySelectorAll('img,svg').forEach(img=>{
       const par=img.parentElement;
       const clone=par.cloneNode(true);
@@ -299,7 +312,7 @@ reader.addEventListener('touchend',e=>{if(!swp)return;const dx=e.changedTouches[
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2400);}
 let sopen=false;
 function updSB(){const mob=window.innerWidth<=700;const sb=document.getElementById('sidebar'),ov=document.getElementById('sOverlay');if(mob){sb.classList.toggle('open',sopen);sb.classList.remove('off');ov.classList.toggle('show',sopen);}else{sb.classList.toggle('off',!sopen);sb.classList.remove('open');ov.classList.remove('show');}}
-window.addEventListener('DOMContentLoaded',()=>{sopen=window.innerWidth>700;updSB();applyTypo();openDB();});
+window.addEventListener('DOMContentLoaded',()=>{sopen=window.innerWidth>700;updSB();applyTypo();openDB();updFsBtn();});
 document.getElementById('bSidebar').addEventListener('click',()=>{sopen=!sopen;updSB();});
 document.getElementById('sOverlay').addEventListener('click',()=>{sopen=false;updSB();});
 function closePanels(){document.querySelectorAll('.fp').forEach(p=>p.classList.remove('open'));}
@@ -326,7 +339,7 @@ document.getElementById('gsBtn').addEventListener('click',doGS);
 document.getElementById('gsInput').addEventListener('keydown',e=>{if(e.key==='Enter')doGS();});
 function doGS(){const q=document.getElementById('gsInput').value.trim(),el=document.getElementById('gsResults');if(!q||!S.spine.length){el.innerHTML='<div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Въведи дума за търсене.</div>';return;}el.innerHTML='<div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Търсене...</div>';const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');let results=[],idx=0;function next(){if(idx>=S.spine.length||results.length>=200){show();return;}const i=idx++;const p=GSC[i]?Promise.resolve(GSC[i]):zt(S.spine[i].href).then(raw=>{const doc=pxml(raw,'application/xhtml+xml');const body=doc.querySelector('body');const txt=body?body.textContent.replace(/\s+/g,' ').trim():'';GSC[i]=txt;return txt;}).catch(()=>'');p.then(text=>{re.lastIndex=0;let m;while((m=re.exec(text))!==null&&results.length<200){const st=Math.max(0,m.index-60),en=Math.min(text.length,m.index+q.length+60);results.push({ch:i,lbl:S.toc[i]?.label||('Глава '+(i+1)),ctx:text.slice(st,en),qi:m.index-st,ql:q.length});re.lastIndex=m.index+1;}next();});}function show(){if(!results.length){el.innerHTML='<div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Не е намерено.</div>';return;}el.innerHTML=`<div style="padding:.4rem .9rem;font-size:.75rem;color:var(--txm);border-bottom:1px solid var(--bd)">${results.length+(results.length>=200?'+':'')} резултата</div>`;results.forEach(r=>{const d=document.createElement('div');d.className='gsrow';const b=esc(r.ctx.slice(0,r.qi)),mt=esc(r.ctx.slice(r.qi,r.qi+r.ql)),af=esc(r.ctx.slice(r.qi+r.ql));d.innerHTML=`<div style="font-weight:600;font-size:.8rem">${esc(r.lbl)}</div><div class="gsch">...${b}<mark>${mt}</mark>${af}...</div>`;d.addEventListener('click',()=>{closePanels();gotoChapter(r.ch);});el.appendChild(d);});}next();}
 let DB=null;
-function openDB(){const r=indexedDB.open('epub21',1);r.onupgradeneeded=e=>e.target.result.createObjectStore('h',{keyPath:'k'});r.onsuccess=e=>{DB=e.target.result;};r.onerror=()=>{};}
+function openDB(){const r=indexedDB.open('epub23',1);r.onupgradeneeded=e=>e.target.result.createObjectStore('h',{keyPath:'k'});r.onsuccess=e=>{DB=e.target.result;};r.onerror=()=>{};}
 function saveHist(fn){if(!DB)return;DB.transaction('h','readwrite').objectStore('h').put({k:S.bookKey,title:S.meta.title,author:S.meta.author,file:fn,ts:Date.now()});}
 function getHist(){return new Promise(res=>{if(!DB){res([]);return;}const r=DB.transaction('h','readonly').objectStore('h').getAll();r.onsuccess=()=>res(r.result.sort((a,b)=>b.ts-a.ts));r.onerror=()=>res([]);});}
 function delHist(k){if(DB)DB.transaction('h','readwrite').objectStore('h').delete(k);}
@@ -337,7 +350,7 @@ reader.addEventListener('dragleave',()=>document.getElementById('dz').classList.
 reader.addEventListener('drop',async e=>{e.preventDefault();document.getElementById('dz').classList.remove('drag');const f=e.dataTransfer.files?.[0];if(f&&/\.epub$/i.test(f.name))await openEpub(f);});
 document.getElementById('dz').addEventListener('click',()=>document.getElementById('epubFile').click());
 document.getElementById('epubFile').addEventListener('change',async e=>{const f=e.target.files?.[0];if(f)await openEpub(f);e.target.value='';});
-async function openEpub(file){if(!window.JSZip){toast('JSZip липсва!');return;}toast('Зареждане…');try{S.zip=await JSZip.loadAsync(file);S.cache.clear();Object.keys(GSC).forEach(k=>delete GSC[k]);const contxml=await zt('META-INF/container.xml');const rf=pxml(contxml,'application/xml').querySelector('rootfile');if(!rf)throw new Error('no rootfile');S.opfPath=rf.getAttribute('full-path');S.rootPath=dn(S.opfPath);const opfXml=await zt(S.opfPath);const opf=pxml(opfXml,'application/xml');parseMeta(opf);parseSpine(opf);prepToc(opf);let h=0;const s=S.meta.title+'|'+S.meta.author;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;S.bookKey='bk'+(h>>>0).toString(36);saveHist(file.name);document.getElementById('es').style.display='none';const pos=LS.get('e21pos_'+S.bookKey,null);if(pos&&pos.cur>0){await gotoChapter(pos.cur,pos.st,pos.pg);toast(S.meta.title+' · гл.'+(pos.cur+1));}else{await gotoChapter(0);toast('Заредена: '+S.meta.title);}}catch(err){console.error(err);toast('Грешка: '+err.message);}}
+async function openEpub(file){if(!window.JSZip){toast('JSZip липсва!');return;}toast('Зареждане…');try{S.zip=await JSZip.loadAsync(file);S.cache.clear();Object.keys(GSC).forEach(k=>delete GSC[k]);const contxml=await zt('META-INF/container.xml');const rf=pxml(contxml,'application/xml').querySelector('rootfile');if(!rf)throw new Error('no rootfile');S.opfPath=rf.getAttribute('full-path');S.rootPath=dn(S.opfPath);const opfXml=await zt(S.opfPath);const opf=pxml(opfXml,'application/xml');parseMeta(opf);parseSpine(opf);prepToc(opf);let h=0;const s=S.meta.title+'|'+S.meta.author;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;S.bookKey='bk'+(h>>>0).toString(36);saveHist(file.name);document.getElementById('es').style.display='none';const pos=LS.get('e23pos_'+S.bookKey,null);if(pos&&pos.cur>0){await gotoChapter(pos.cur,pos.st,pos.pg);toast(S.meta.title+' · гл.'+(pos.cur+1));}else{await gotoChapter(0);toast('Заредена: '+S.meta.title);}}catch(err){console.error(err);toast('Грешка: '+err.message);}}
 function parseMeta(opf){const t=[...opf.querySelectorAll('*')].find(e=>e.localName==='title')?.textContent?.trim();const a=[...opf.querySelectorAll('*')].find(e=>e.localName==='creator')?.textContent?.trim();S.meta={title:t||'Без заглавие',author:a||'-'};document.getElementById('bkTitle').textContent=S.meta.title;document.getElementById('bkAuthor').textContent=S.meta.author;}
 function parseSpine(opf){S.manifest=new Map();opf.querySelectorAll('manifest item').forEach(it=>S.manifest.set(it.getAttribute('id'),{href:it.getAttribute('href'),mt:it.getAttribute('media-type'),props:it.getAttribute('properties')||''}));S.spine=[...opf.querySelectorAll('spine itemref')].map(ir=>{const it=S.manifest.get(ir.getAttribute('idref'));if(!it)return null;return{href:np(jp(S.rootPath,it.href)),mt:it.mt};}).filter(Boolean);}
 function prepToc(opf){S.toc=[];S.tocLoaded=false;const nav=[...S.manifest.values()].find(i=>i.props.includes('nav'));const ncxId=opf.querySelector('spine')?.getAttribute('toc');const ncx=ncxId?S.manifest.get(ncxId):null;const c=nav||ncx;if(!c)return;S.tocPath=np(jp(S.rootPath,c.href));S.tocSource=c.mt;}
