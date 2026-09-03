@@ -1,0 +1,17 @@
+{
+  "short_name": "EPUB Reader",
+  "name": "EPUB Reader Pro",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3389/3389081.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#1a1815",
+  "theme_color": "#1a1815",
+  "display": "standalone",
+  "orientation": "any"
+}
