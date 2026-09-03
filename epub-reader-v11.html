@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="bg" data-theme="light">
+<html lang="bg" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<title>EPUB Reader v24</title>
+<meta name="theme-color" content="#1a1815"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>EPUB Reader v25 Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:ital,wght@0,300;0,400;1,300&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&family=Open+Sans:wght@400;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
@@ -12,6 +15,13 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;-webkit-tap-highlight-color:transparent;}
 body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:var(--tx);background:var(--bg);display:flex;flex-direction:column;}
+
+/* Custom Scrollbars за изчистен визуален стил */
+::-webkit-scrollbar {width: 6px; height: 6px;}
+::-webkit-scrollbar-track {background: transparent;}
+::-webkit-scrollbar-thumb {background: var(--bd); border-radius: 4px;}
+::-webkit-scrollbar-thumb:hover {background: var(--pr);}
+
 #topbar{flex-shrink:0;height:var(--tb);display:flex;align-items:center;gap:.3rem;padding:0 .6rem;background:var(--sf);border-bottom:1px solid var(--bd);z-index:30;}
 .brand{font-weight:700;font-size:.95rem;margin-right:auto;color:var(--pr);white-space:nowrap;}
 .ib{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 .5rem;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;font-size:.88rem;font-family:inherit;transition:background .13s;white-space:nowrap;-webkit-user-select:none;user-select:none;touch-action:manipulation;}
@@ -25,17 +35,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:var(
 #sidebar{width:260px;flex-shrink:0;display:flex;flex-direction:column;background:var(--sf);border-right:1px solid var(--bd);z-index:26;transition:transform .25s;}
 @media(max-width:700px){#sidebar{position:absolute;top:0;bottom:0;left:0;transform:translateX(-100%);}#sidebar.open{transform:translateX(0);}}
 @media(min-width:701px){#sidebar.off{width:0;overflow:hidden;border:none;}}
-.mb{padding:.7rem .9rem;border-bottom:1px solid var(--bd);font-size:.8rem;color:var(--txm);}
-.mb strong{display:block;color:var(--tx);font-size:.88rem;margin-top:.12rem;line-height:1.3;}
+.mb{padding:.8rem .9rem;border-bottom:1px solid var(--bd);font-size:.8rem;color:var(--txm);display:flex;flex-direction:column;gap:.3rem;}
+.mb strong{display:block;color:var(--tx);font-size:.88rem;line-height:1.3;}
+#bkCoverWrap{display:none;width:100%;max-height:140px;margin-bottom:.5rem;overflow:hidden;border-radius:6px;border:1px solid var(--bd);}
+#bkCoverWrap img{width:100%;height:100%;object-fit:cover;}
 #sbox{padding:.5rem .7rem;border-bottom:1px solid var(--bd);display:flex;gap:.3rem;}
 #si{flex:1;border:1px solid var(--bd);border-radius:6px;padding:.4rem .65rem;font:inherit;font-size:.84rem;background:var(--bg);color:var(--tx);outline:none;min-height:44px;}
 #tocWrap{flex:1;overflow-y:auto;padding:.3rem;-webkit-overflow-scrolling:touch;}
 .tb{display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:6px;padding:.55rem .75rem;font:inherit;font-size:.87rem;color:var(--tx);cursor:pointer;min-height:44px;touch-action:manipulation;}
 .tb:hover{background:var(--sf2);}
 .tb.on{background:var(--sf2);border-color:var(--bd);font-weight:700;color:var(--pr);}
-.fp{display:none;position:fixed;right:.75rem;top:calc(var(--tb)+8px);width:min(310px,calc(100vw - 1.5rem));background:var(--sf);border:1px solid var(--bd);border-radius:12px;box-shadow:0 6px 32px rgba(0,0,0,.2);z-index:50;max-height:65vh;overflow-y:auto;flex-direction:column;}
+
+.fp{display:none;position:fixed;right:.75rem;top:calc(var(--tb)+8px);width:min(310px,calc(100vw - 1.5rem));background:var(--sf);border:1px solid var(--bd);border-radius:12px;box-shadow:0 6px 32px rgba(0,0,0,.3);z-index:50;max-height:75vh;overflow-y:auto;flex-direction:column;}
 .fp.open{display:flex!important;flex-direction:column;}
-.ph{padding:.65rem .9rem;border-bottom:1px solid var(--bd);font-weight:700;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.ph{padding:.65rem .9rem;border-bottom:1px solid var(--bd);font-weight:700;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;position:sticky;top:0;background:var(--sf);z-index:2;}
 .bi,.ni{padding:.55rem .9rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;font-size:.84rem;border-bottom:1px solid var(--bd);}
 .bi:hover{background:var(--sf2);}
 .bi span{flex:1;cursor:pointer;padding:.3rem 0;}
@@ -54,15 +67,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:var(
 #progFill{height:100%;background:var(--pr);width:0;transition:width .25s;}
 #readerWrap{flex:1;overflow:hidden;position:relative;min-height:0;}
 #reader{width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:var(--bg);outline:none;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:2rem var(--pad);}
-#reader::-webkit-scrollbar{width:4px;}
-#reader::-webkit-scrollbar-thumb{background:var(--bd);border-radius:999px;}
 body.page-mode #reader{overflow:hidden;padding:0;}
 body.page-mode #chapter{max-width:none!important;margin:0!important;column-fill:auto;will-change:transform;transition:transform .22s cubic-bezier(.4,0,.2,1);}
 #chapter{max-width:680px;margin:0 auto;font-family:Lora,Georgia,serif;font-size:1rem;line-height:1.85;color:var(--tx);}
 #chapter h1,#chapter h2,#chapter h3,#chapter h4{line-height:1.3;margin:1.5em 0 .45em;color:var(--tx);}
 #chapter h1{font-size:1.55em;}#chapter h2{font-size:1.25em;}#chapter h3{font-size:1.08em;}
 #chapter p{margin:.5em 0;}
-/* FIX 1: Justify на ВСИЧКИ екрани — премахнато @media(min-width:500px) */
 body:not(.page-mode):not(.nojus) #chapter p{text-align:justify;}
 body.nojus #chapter p{text-align:left!important;}
 #chapter img,#chapter svg{max-width:100%;height:auto;display:block;margin:1.2em auto;border-radius:4px;}
@@ -104,15 +114,15 @@ mark.hl{background:var(--hl);border-radius:2px;}
   <label class="ib ibp" for="epubFile">Отвори</label>
   <input type="file" id="epubFile" accept=".epub,application/epub+zip"/>
   <button class="ib" id="bSidebar">&#9776;</button>
-  <button class="ib" id="bBm">&#128278;</button>
-  <button class="ib" id="bNotes">&#128221;</button>
-  <button class="ib" id="bFont">&#1040;&#1072;</button>
-  <button class="ib" id="bHist">&#128218;</button>
-  <button class="ib" id="bGS">&#128269;</button>
-  <button class="ib" id="bTheme">&#127769;</button>
+  <button class="ib" id="bBm" title="Отметки">&#128278;</button>
+  <button class="ib" id="bNotes" title="Бележки">&#128221;</button>
+  <button class="ib" id="bFont" title="Шрифт и изглед">&#1040;&#1072;</button>
+  <button class="ib" id="bHist" title="Последно четени">&#128218;</button>
+  <button class="ib" id="bGS" title="Търсене в книгата">&#128269;</button>
+  <button class="ib" id="bTheme" title="Превключи тема">&#127769;</button>
   <button class="ib" id="bMore" style="display:none">&#8943;</button>
 </div>
-<!-- FIX 2: Добавен бутон Цял екран в мобилното меню -->
+
 <div id="moreMenu">
   <button class="ib" id="mBm" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128278; Отметки</button>
   <button class="ib" id="mNotes" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128221; Бележки</button>
@@ -121,11 +131,13 @@ mark.hl{background:var(--hl);border-radius:2px;}
   <button class="ib" id="mGS" style="width:100%;border-radius:0;border:none;border-bottom:1px solid var(--bd);justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#128269; Търсене</button>
   <button class="ib" id="mFS" style="width:100%;border-radius:0;border:none;justify-content:flex-start;gap:.5rem;padding:.7rem 1rem;min-height:48px">&#x26F6; Цял екран</button>
 </div>
+
 <div id="bmPanel" class="fp">
   <div class="ph">&#128278; Отметки <button class="ib" id="bmX" style="height:36px;min-width:36px">&#10005;</button></div>
   <div id="bmList"><div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Все още няма отметки.</div></div>
   <div class="pf2"><button class="ib ibp" style="width:100%;min-height:44px" id="bmAdd">&#128278; Добави на позицията</button></div>
 </div>
+
 <div id="ntPanel" class="fp">
   <div class="ph">&#128221; Бележки <button class="ib" id="ntX" style="height:36px;min-width:36px">&#10005;</button></div>
   <div class="pf2" style="border-top:none;border-bottom:1px solid var(--bd)">
@@ -134,6 +146,7 @@ mark.hl{background:var(--hl);border-radius:2px;}
   </div>
   <div id="ntList"></div>
 </div>
+
 <div id="fontPanel" class="fp">
   <div class="ph">&#1040;&#1072; Шрифт и изглед <button class="ib" id="fontX" style="height:36px;min-width:36px">&#10005;</button></div>
   <div class="frow">
@@ -178,19 +191,23 @@ mark.hl{background:var(--hl);border-radius:2px;}
     </div>
   </div>
 </div>
+
 <div id="histPanel" class="fp">
   <div class="ph">&#128218; Последно четени <button class="ib" id="histX" style="height:36px;min-width:36px">&#10005;</button></div>
   <div id="histList"><div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Все още няма история.</div></div>
 </div>
+
 <div id="gsPanel" class="fp">
   <div class="ph">&#128269; Търсене в книгата <button class="ib" id="gsX" style="height:36px;min-width:36px">&#10005;</button></div>
   <div id="gsInputWrap"><input id="gsInput" type="search" placeholder="Търси навсякъде..."/><button class="ib ibp" id="gsBtn">GO</button></div>
   <div id="gsResults"><div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Въведи дума за търсене.</div></div>
 </div>
+
 <div id="app">
   <div id="sOverlay"></div>
   <nav id="sidebar">
     <div class="mb">
+      <div id="bkCoverWrap"><img id="bkCover" src="" alt="Cover"/></div>
       <div style="font-size:.74rem">Заглавие</div><strong id="bkTitle">-</strong>
       <div style="font-size:.74rem;margin-top:.35rem">Автор</div><strong id="bkAuthor">-</strong>
     </div>
@@ -201,6 +218,7 @@ mark.hl{background:var(--hl);border-radius:2px;}
     </div>
     <div id="tocWrap"></div>
   </nav>
+
   <div id="rw">
     <div id="prog"><div id="progFill"></div></div>
     <div id="readerWrap">
@@ -232,6 +250,7 @@ mark.hl{background:var(--hl);border-radius:2px;}
   </div>
 </div>
 <div id="toast"></div>
+
 <script>
 const S={zip:null,spine:[],toc:[],manifest:new Map(),rootPath:'',opfPath:'',tocPath:'',tocSource:'',tocLoaded:false,meta:{title:'-',author:'-'},cur:0,scale:1,lineHeight:1.85,readFont:'Lora,Georgia,serif',readWidth:'680px',theme:window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light',justify:true,pageMode:false,cache:new Map(),bm:[],notes:{},bookKey:'',pendingSel:null};
 let PAGE=0,PAGES=1,saveTimer=null;
@@ -256,7 +275,7 @@ document.querySelectorAll('.fb[data-rw]').forEach(b=>b.addEventListener('click',
 document.getElementById('bJustify').addEventListener('click',()=>{S.justify=!S.justify;applyTypo();saveGlobal();});
 document.getElementById('bPageMode').addEventListener('click',()=>{S.pageMode=!S.pageMode;applyTypo();if(S.pageMode)setupPageMode();else teardownPageMode();saveGlobal();toast(S.pageMode?'Режим: Страница':'Режим: Скрол');});
 window.addEventListener('resize',()=>{sopen=window.innerWidth>700;updSB();if(S.pageMode)setupPageMode();});
-/* FIX 2: Fullscreen логика */
+
 function updFsBtn(){const btn=document.getElementById('mFS');if(!btn)return;const isFs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);btn.textContent=isFs?'⛶ Изход от цял екран':'⛶ Цял екран';}
 document.addEventListener('fullscreenchange',updFsBtn);
 document.addEventListener('webkitfullscreenchange',updFsBtn);
@@ -267,6 +286,7 @@ document.getElementById('mFS').addEventListener('click',()=>{
   if(isFs){const ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;if(ex)ex.call(document);}
   else{const el=document.documentElement;const rq=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;if(rq)rq.call(el).catch(()=>toast('Fullscreen не е разрешен'));else toast('Fullscreen не се поддържа');}
 });
+
 function setupPageMode(){
   if(!S.pageMode)return;
   reader.style.overflowY='hidden';reader.style.overflowX='hidden';reader.style.padding='0';
@@ -351,10 +371,26 @@ reader.addEventListener('dragleave',()=>document.getElementById('dz').classList.
 reader.addEventListener('drop',async e=>{e.preventDefault();document.getElementById('dz').classList.remove('drag');const f=e.dataTransfer.files?.[0];if(f&&/\.epub$/i.test(f.name))await openEpub(f);});
 document.getElementById('dz').addEventListener('click',()=>document.getElementById('epubFile').click());
 document.getElementById('epubFile').addEventListener('change',async e=>{const f=e.target.files?.[0];if(f)await openEpub(f);e.target.value='';});
+
 async function openEpub(file){if(!window.JSZip){toast('JSZip липсва!');return;}toast('Зареждане…');try{S.zip=await JSZip.loadAsync(file);S.cache.clear();Object.keys(GSC).forEach(k=>delete GSC[k]);const contxml=await zt('META-INF/container.xml');const rf=pxml(contxml,'application/xml').querySelector('rootfile');if(!rf)throw new Error('no rootfile');S.opfPath=rf.getAttribute('full-path');S.rootPath=dn(S.opfPath);const opfXml=await zt(S.opfPath);const opf=pxml(opfXml,'application/xml');parseMeta(opf);parseSpine(opf);prepToc(opf);let h=0;const s=S.meta.title+'|'+S.meta.author;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;S.bookKey='bk'+(h>>>0).toString(36);saveHist(file.name);document.getElementById('es').style.display='none';const pos=LS.get('e23pos_'+S.bookKey,null);if(pos&&pos.cur>0){await gotoChapter(pos.cur,pos.st,pos.pg);toast(S.meta.title+' · гл.'+(pos.cur+1));}else{await gotoChapter(0);toast('Заредена: '+S.meta.title);}}catch(err){console.error(err);toast('Грешка: '+err.message);}}
+
 function parseMeta(opf){const t=[...opf.querySelectorAll('*')].find(e=>e.localName==='title')?.textContent?.trim();const a=[...opf.querySelectorAll('*')].find(e=>e.localName==='creator')?.textContent?.trim();S.meta={title:t||'Без заглавие',author:a||'-'};document.getElementById('bkTitle').textContent=S.meta.title;document.getElementById('bkAuthor').textContent=S.meta.author;}
-function parseSpine(opf){S.manifest=new Map();opf.querySelectorAll('manifest item').forEach(it=>S.manifest.set(it.getAttribute('id'),{href:it.getAttribute('href'),mt:it.getAttribute('media-type'),props:it.getAttribute('properties')||''}));S.spine=[...opf.querySelectorAll('spine itemref')].map(ir=>{const it=S.manifest.get(ir.getAttribute('idref'));if(!it)return null;return{href:np(jp(S.rootPath,it.href)),mt:it.mt};}).filter(Boolean);}
+
+function parseSpine(opf){
+  S.manifest=new Map();
+  opf.querySelectorAll('manifest item').forEach(it=>{
+    const href=decodeURIComponent(it.getAttribute('href'));
+    S.manifest.set(it.getAttribute('id'),{href:href,mt:it.getAttribute('media-type'),props:it.getAttribute('properties')||''});
+  });
+  S.spine=[...opf.querySelectorAll('spine itemref')].map(ir=>{
+    const it=S.manifest.get(ir.getAttribute('idref'));
+    if(!it)return null;
+    return{href:np(jp(S.rootPath,it.href)),mt:it.mt};
+  }).filter(Boolean);
+}
+
 function prepToc(opf){S.toc=[];S.tocLoaded=false;const nav=[...S.manifest.values()].find(i=>i.props.includes('nav'));const ncxId=opf.querySelector('spine')?.getAttribute('toc');const ncx=ncxId?S.manifest.get(ncxId):null;const c=nav||ncx;if(!c)return;S.tocPath=np(jp(S.rootPath,c.href));S.tocSource=c.mt;}
+
 async function ensureToc(){if(S.tocLoaded||!S.tocPath)return;const raw=await zt(S.tocPath);const isNcx=S.tocSource==='application/x-dtbncx+xml';const doc=pxml(raw,isNcx?'application/xml':'application/xhtml+xml');if(isNcx){S.toc=[...doc.querySelectorAll('navMap navPoint')].map((p,i)=>({label:p.querySelector('navLabel text')?.textContent?.trim()||('Глава '+(i+1)),href:np(jp(dn(S.tocPath),(p.querySelector('content')?.getAttribute('src')||'').split('#')[0]))}));}else{const nav=doc.querySelector('nav[epub\\:type="toc"],nav[type="toc"],nav');if(nav)S.toc=[...nav.querySelectorAll(':scope ol li a,ol li a')].map((a,i)=>({label:a.textContent.trim()||('Глава '+(i+1)),href:np(jp(dn(S.tocPath),a.getAttribute('href').split('#')[0]))})).filter(t=>t.href);}const seen=new Set();S.toc=S.toc.filter(t=>{if(seen.has(t.href))return false;seen.add(t.href);return true;});S.tocLoaded=true;renderToc();}
 function renderToc(){const wrap=document.getElementById('tocWrap');wrap.innerHTML='';const items=S.toc.length?S.toc:S.spine.map((_,i)=>({label:'Глава '+(i+1),href:S.spine[i].href}));items.forEach((e,i)=>{const b=document.createElement('button');b.className='tb';b.textContent=e.label;b.addEventListener('click',()=>{const si=S.toc.length?spineIdx(e.href):i;gotoChapter(si>=0?si:i);if(window.innerWidth<=700){sopen=false;updSB();}});wrap.appendChild(b);});hlToc();}
 function hlToc(){const items=S.toc.length?S.toc:S.spine.map(s=>({href:s.href}));document.querySelectorAll('.tb').forEach((b,i)=>{const on=S.toc.length?spineIdx(items[i]?.href||'')=== S.cur:i===S.cur;b.classList.toggle('on',on);if(on)b.scrollIntoView({block:'nearest'});});}
