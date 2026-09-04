@@ -111,8 +111,7 @@ mark.hl{background:var(--hl);border-radius:2px;}
 <body>
 <div id="topbar">
   <span class="brand">&#128218; EPUB</span>
-  <button class="ib ibp" id="bLib" title="Локална библиотека">📚 Библиотека</button>
-  <label class="ib" for="epubFile">Отвори</label>
+  <label class="ib ibp" for="epubFile">Отвори</label>
   <input type="file" id="epubFile" accept=".epub,application/epub+zip"/>
   <button class="ib" id="bSidebar">&#9776;</button>
   <button class="ib" id="bBm" title="Отметки">&#128278;</button>
@@ -198,13 +197,6 @@ mark.hl{background:var(--hl);border-radius:2px;}
       <button class="fb" id="bJustify">Justify вкл.</button>
       <button class="fb" id="bPageMode">&#128196; Страница</button>
     </div>
-  </div>
-</div>
-
-<div id="libPanel" class="fp">
-  <div class="ph">📚 Моята библиотека <button class="ib" id="libX" style="height:36px;min-width:36px">&#10005;</button></div>
-  <div id="libList" style="padding:.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.8rem;">
-    <div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm);grid-column:1/-1">Няма запазени книги в библиотеката.</div>
   </div>
 </div>
 
@@ -390,29 +382,8 @@ window.addEventListener('DOMContentLoaded',()=>{sopen=window.innerWidth>700;updS
 document.getElementById('bSidebar').addEventListener('click',()=>{sopen=!sopen;updSB();});
 document.getElementById('sOverlay').addEventListener('click',()=>{sopen=false;updSB();});
 function closePanels(){document.querySelectorAll('.fp').forEach(p=>p.classList.remove('open'));}
-['bBm','bNotes','bFont','bHist','bGS','bLib'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',()=>{
-    if(id==='bBm'){
-      const sel=window.getSelection();
-      if(sel&&sel.rangeCount>0&&sel.toString().trim()){
-        const range=sel.getRangeAt(0);
-        S.pendingSel={snippet:sel.toString().trim().slice(0,120),selOff:range.startOffset,xpath:(()=>{try{return getXP(range.startContainer);}catch{return '';}})()};
-      }else S.pendingSel=null;
-    }
-    const map={bBm:'bmPanel',bNotes:'ntPanel',bFont:'fontPanel',bHist:'histPanel',bGS:'gsPanel',bLib:'libPanel'};
-    const p=document.getElementById(map[id]);
-    const was=p.classList.contains('open');
-    closePanels();
-    if(!was){
-      if(id==='bBm')renderBm();
-      if(id==='bNotes')renderNt();
-      if(id==='bHist')renderHist();
-      if(id==='bLib')renderLib();
-      p.classList.add('open');
-    }
-  });
-});
-['bmX','ntX','fontX','histX','gsX','libX'].forEach(id=>document.getElementById(id).addEventListener('click',closePanels));
+['bBm','bNotes','bFont','bHist','bGS'].forEach(id=>{document.getElementById(id).addEventListener('click',()=>{if(id==='bBm'){const sel=window.getSelection();if(sel&&sel.rangeCount>0&&sel.toString().trim()){const range=sel.getRangeAt(0);S.pendingSel={snippet:sel.toString().trim().slice(0,120),selOff:range.startOffset,xpath:(()=>{try{return getXP(range.startContainer);}catch{return '';}})()};}else S.pendingSel=null;}const map={bBm:'bmPanel',bNotes:'ntPanel',bFont:'fontPanel',bHist:'histPanel',bGS:'gsPanel'};const p=document.getElementById(map[id]);const was=p.classList.contains('open');closePanels();if(!was){if(id==='bBm')renderBm();if(id==='bNotes')renderNt();if(id==='bHist')renderHist();p.classList.add('open');}});});
+['bmX','ntX','fontX','histX','gsX'].forEach(id=>document.getElementById(id).addEventListener('click',closePanels));
 const moreMenu=document.getElementById('moreMenu');
 document.getElementById('bMore').addEventListener('click',e=>{e.stopPropagation();moreMenu.style.display=moreMenu.style.display==='block'?'none':'block';});
 document.addEventListener('click',e=>{if(!moreMenu.contains(e.target)&&e.target.id!=='bMore')moreMenu.style.display='none';});
@@ -434,102 +405,7 @@ document.getElementById('gsBtn').addEventListener('click',doGS);
 document.getElementById('gsInput').addEventListener('keydown',e=>{if(e.key==='Enter')doGS();});
 function doGS(){const q=document.getElementById('gsInput').value.trim(),el=document.getElementById('gsResults');if(!q||!S.spine.length){el.innerHTML='<div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Въведи дума за търсене.</div>';return;}el.innerHTML='<div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Търсене...</div>';const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');let results=[],idx=0;function next(){if(idx>=S.spine.length||results.length>=200){show();return;}const i=idx++;const p=GSC[i]?Promise.resolve(GSC[i]):zt(S.spine[i].href).then(raw=>{const doc=pxml(raw,'application/xhtml+xml');const body=doc.querySelector('body');const txt=body?body.textContent.replace(/\s+/g,' ').trim():'';GSC[i]=txt;return txt;}).catch(()=>'');p.then(text=>{re.lastIndex=0;let m;while((m=re.exec(text))!==null&&results.length<200){const st=Math.max(0,m.index-60),en=Math.min(text.length,m.index+q.length+60);results.push({ch:i,lbl:S.toc[i]?.label||('Глава '+(i+1)),ctx:text.slice(st,en),qi:m.index-st,ql:q.length});re.lastIndex=m.index+1;}next();});}function show(){if(!results.length){el.innerHTML='<div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm)">Не е намерено.</div>';return;}el.innerHTML=`<div style="padding:.4rem .9rem;font-size:.75rem;color:var(--txm);border-bottom:1px solid var(--bd)">${results.length+(results.length>=200?'+':'')} резултата</div>`;results.forEach(r=>{const d=document.createElement('div');d.className='gsrow';const b=esc(r.ctx.slice(0,r.qi)),mt=esc(r.ctx.slice(r.qi,r.qi+r.ql)),af=esc(r.ctx.slice(r.qi+r.ql));d.innerHTML=`<div style="font-weight:600;font-size:.8rem">${esc(r.lbl)}</div><div class="gsch">...${b}<mark>${mt}</mark>${af}...</div>`;d.addEventListener('click',()=>{closePanels();gotoChapter(r.ch);});el.appendChild(d);});}next();}
 let DB=null;
-// --- ДОБАВКА ЗА ЛОКАЛНА БИБЛИОТЕКА ---
-// 1. Обновяваме базата данни, за да поддържа съхранение на цели EPUB файлове (blob)
-function openDB(){
-  const r = indexedDB.open('epub23', 2); // сменяме версията на 2
-  r.onupgradeneeded = e => {
-    const db = e.target.result;
-    if(!db.objectStoreNames.contains('h')) db.createObjectStore('h', {keyPath:'k'});
-    if(!db.objectStoreNames.contains('books')) db.createObjectStore('books', {keyPath:'k'});
-  };
-  r.onsuccess = e => { DB = e.target.result; renderLib(); };
-  r.onerror = () => {};
-}
-
-// 2. Функция за запазване на цяла книга в локалната библиотека
-async function saveToLibrary(file, bookKey, meta, zipObj) {
-  if(!DB) return;
-  let coverData = '';
-  try {
-    // Опитваме да извлечем корицата за визуализация в библиотеката
-    const opfXml = await zt(S.opfPath);
-    const opf = pxml(opfXml, 'application/xml');
-    const imgItem = opf.querySelector('item[media-type^="image/"]');
-    if(imgItem) {
-      const imgPath = np(jp(S.rootPath, decodeURIComponent(imgItem.getAttribute('href'))));
-      coverData = await r2d(imgPath);
-    }
-  } catch(e){}
-
-  const tx = DB.transaction('books', 'readwrite');
-  tx.objectStore('books').put({
-    k: bookKey,
-    title: meta.title,
-    author: meta.author,
-    fileData: file, // Запазва самия File / Blob в браузъра
-    fileName: file.name,
-    cover: coverData,
-    ts: Date.now()
-  });
-}
-
-// 3. Зареждане на списъка с книги в панела
-function renderLib() {
-  const el = document.getElementById('libList');
-  if(!el || !DB) return;
-  const tx = DB.transaction('books', 'readonly');
-  const req = tx.objectStore('books').getAll();
-  req.onsuccess = () => {
-    const items = req.result.sort((a,b) => b.ts - a.ts);
-    if(!items.length) {
-      el.innerHTML = '<div style="padding:.7rem .9rem;font-size:.84rem;color:var(--txm);grid-column:1/-1">Няма запазени книги. Качи книга чрез "Отвори", за да се запази тук.</div>';
-      return;
-    }
-    el.innerHTML = '';
-    items.forEach(item => {
-      const card = document.createElement('div');
-      card.style.cssText = 'background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:.5rem;display:flex;flex-direction:column;gap:.3rem;position:relative;cursor:pointer;';
-      card.innerHTML = `
-        <div style="height:110px;background:var(--bg);border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--txm);text-align:center;">
-          ${item.cover ? `<img src="${item.cover}" style="width:100%;height:100%;object-fit:cover;"/>` : 'Няма корица'}
-        </div>
-        <div style="font-weight:600;font-size:.78rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(item.title)}</div>
-        <div style="font-size:.7rem;color:var(--txm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.author)}</div>
-        <button class="hdel" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;line-height:1;">✕</button>
-      `;
-      card.addEventListener('click', (e) => {
-        if(e.target.classList.contains('hdel')) return;
-        closePanels();
-        openEpub(item.fileData);
-      });
-      card.querySelector('.hdel').addEventListener('click', (e) => {
-        e.stopPropagation();
-        DB.transaction('books', 'readwrite').objectStore('books').delete(item.k);
-        renderLib();
-      });
-      el.appendChild(card);
-    });
-  };
-}
-
-// 4. Закачане на събитията за отваряне/затваряне на новия панел
-  const p = document.getElementById('libPanel');
-  const was = p.classList.contains('open');
-  closePanels();
-  if(!was) { renderLib(); p.classList.add('open'); }
-});
-document.getElementById('libX').addEventListener('click', closePanels);
-
-// 5. В края на съществуващата ти функция openEpub(file) добавяме извикването за автоматично записване:
-// Намери последните редове на openEpub(file) и извикай saveToLibrary:
-/*
-  ...
-  saveHist(file.name);
-  saveToLibrary(file, S.bookKey, S.meta, S.zip); // <- Добави този ред
-  document.getElementById('es').style.display='none';
-  ...
-*/
+function openDB(){const r=indexedDB.open('epub23',1);r.onupgradeneeded=e=>e.target.result.createObjectStore('h',{keyPath:'k'});r.onsuccess=e=>{DB=e.target.result;};r.onerror=()=>{};}
 function saveHist(fn){if(!DB)return;DB.transaction('h','readwrite').objectStore('h').put({k:S.bookKey,title:S.meta.title,author:S.meta.author,file:fn,ts:Date.now()});}
 function getHist(){return new Promise(res=>{if(!DB){res([]);return;}const r=DB.transaction('h','readonly').objectStore('h').getAll();r.onsuccess=()=>res(r.result.sort((a,b)=>b.ts-a.ts));r.onerror=()=>res([]);});}
 function delHist(k){if(DB)DB.transaction('h','readwrite').objectStore('h').delete(k);}
