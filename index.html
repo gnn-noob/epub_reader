@@ -85,7 +85,7 @@
       border: none;
       color: var(--fg);
       font-size: 1.2rem;
-      padding: 8px 12px;
+      padding: 8px;
       cursor: pointer;
       border-radius: 6px;
       display: flex;
@@ -101,7 +101,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 50vw;
+      max-width: 35vw;
     }
 
     /* Content Area */
@@ -183,7 +183,7 @@
 
     .panel-body { flex: 1; overflow-y: auto; padding: 10px; }
 
-    /* Book / History Item */
+    /* Items */
     .bi {
       display: flex;
       align-items: center;
@@ -208,6 +208,20 @@
       z-index: 200;
       display: none;
     }
+
+    /* Font Menu */
+    .font-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 10px 0;
+    }
+
+    .font-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
   </style>
 </head>
 <body>
@@ -215,7 +229,9 @@
   <header>
     <button class="btn-icon" id="bToc" title="Съдържание">☰</button>
     <div class="nav-title" id="bookTitle">EPUB Reader Pro</div>
-    <div style="display: flex; gap: 4px;">
+    <div style="display: flex; gap: 2px;">
+      <button class="btn-icon" id="bFont" title="Шрифт и размер">Aа</button>
+      <button class="btn-icon" id="bNotes" title="Бележки и Отметки">📝</button>
       <button class="btn-icon" id="bHist" title="Локална библиотека">📚</button>
       <button class="btn-icon" id="bTheme" title="Смяна на тема">☀️</button>
       <button class="btn-icon" id="bFs" title="Цял екран">⛶</button>
@@ -262,6 +278,50 @@
     </div>
   </div>
 
+  <!-- Drawer Panel for Font Settings -->
+  <div class="panel" id="fontPanel">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h3>Настройки на текста</h3>
+        <button class="btn-icon" onclick="closePanels()">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="font-controls">
+          <div class="font-row">
+            <span>Размер на шрифта</span>
+            <div>
+              <button class="btn-icon" id="bFontDec" style="display:inline-block;">A-</button>
+              <button class="btn-icon" id="bFontInc" style="display:inline-block;">A+</button>
+            </div>
+          </div>
+          <div class="font-row">
+            <span>Шрифт</span>
+            <select id="fontSelect" style="padding: 6px; border-radius: 6px; background: var(--bg); color: var(--fg); border: 1px solid var(--border);">
+              <option value="system-ui, -apple-system, sans-serif">Sans-Serif (Системен)</option>
+              <option value="Georgia, serif">Georgia (Serif)</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="monospace">Monospace</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer Panel for Notes & Bookmarks -->
+  <div class="panel" id="notesPanel">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h3>Бележки и Отметки</h3>
+        <button class="btn-icon" onclick="closePanels()">✕</button>
+      </div>
+      <div style="padding: 10px 15px;">
+        <button class="btn-primary" id="bAddBookmark" style="width: 100%; border-radius: 8px; padding: 8px;">+ Добави отметка тук</button>
+      </div>
+      <div class="panel-body" id="notesList"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -274,12 +334,14 @@
       toc: [],
       curChapter: 0,
       meta: { title: '', author: '' },
-      bookKey: ''
+      bookKey: '',
+      fontSize: 18,
+      fontFamily: 'system-ui, -apple-system, sans-serif'
     };
 
     let DB = null;
 
-    // Initialize IndexedDB with version 2
+    // Initialize IndexedDB
     function initDB() {
       return new Promise((resolve) => {
         const req = indexedDB.open('epub_reader_db', 2);
@@ -297,12 +359,10 @@
       });
     }
 
-    // Request persistent storage
     if (navigator.storage && navigator.storage.persist) {
       navigator.storage.persist();
     }
 
-    // Save Epub Blob into IndexedDB
     async function saveBookToDB(fileBlob, fileName) {
       if (!DB) await initDB();
       if (!DB) return;
@@ -317,7 +377,6 @@
       });
     }
 
-    // Get all books from IndexedDB
     function getStoredBooks() {
       return new Promise((resolve) => {
         if (!DB) return resolve([]);
@@ -332,7 +391,6 @@
       });
     }
 
-    // Delete Book from IndexedDB
     function deleteBookFromDB(key) {
       if (!DB) return;
       const tx = DB.transaction('books', 'readwrite');
@@ -385,7 +443,6 @@
           <button class="btn-icon hdel" style="color:var(--txm); font-size:0.9rem;">✕</button>
         `;
 
-        // Click to open directly from memory
         d.querySelector('div').addEventListener('click', async () => {
           closePanels();
           if (it.blob) {
@@ -396,7 +453,6 @@
           }
         });
 
-        // Click to delete
         d.querySelector('.hdel').addEventListener('click', (e) => {
           e.stopPropagation();
           deleteBookFromDB(it.k);
@@ -488,7 +544,6 @@
       const path = S.spine[idx];
       let html = await zt(path);
 
-      // Simple image blob fixing
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const imgs = doc.querySelectorAll('img');
       for (let img of imgs) {
@@ -512,6 +567,45 @@
       document.getElementById('pInfo').innerText = `${S.curChapter + 1} / ${S.spine.length}`;
     }
 
+    // Bookmarks & Notes
+    function renderNotes() {
+      const el = document.getElementById('notesList');
+      const bm = JSON.parse(localStorage.getItem('bm_' + S.bookKey) || '[]');
+      if (!bm.length) {
+        el.innerHTML = '<div style="padding:15px; color:var(--txm); font-size:0.85rem;">Няма запазени отметки.</div>';
+        return;
+      }
+      el.innerHTML = '';
+      bm.forEach((item, index) => {
+        const d = document.createElement('div');
+        d.className = 'bi';
+        d.innerHTML = `
+          <div style="flex:1; cursor:pointer;" onclick="renderChapter(${item.ch}); closePanels();">
+            <div style="font-weight:600; font-size:0.85rem;">Глава ${item.ch + 1}</div>
+            <div style="font-size:0.75rem; color:var(--txm);">${item.date}</div>
+          </div>
+          <button class="btn-icon" onclick="deleteBookmark(${index})" style="color:var(--txm); font-size:0.9rem;">✕</button>
+        `;
+        el.appendChild(d);
+      });
+    }
+
+    function deleteBookmark(idx) {
+      const bm = JSON.parse(localStorage.getItem('bm_' + S.bookKey) || '[]');
+      bm.splice(idx, 1);
+      localStorage.setItem('bm_' + S.bookKey, JSON.stringify(bm));
+      renderNotes();
+    }
+
+    document.getElementById('bAddBookmark').addEventListener('click', () => {
+      if (!S.bookKey) return;
+      const bm = JSON.parse(localStorage.getItem('bm_' + S.bookKey) || '[]');
+      bm.push({ ch: S.curChapter, date: new Date().toLocaleDateString('bg-BG') });
+      localStorage.setItem('bm_' + S.bookKey, JSON.stringify(bm));
+      renderNotes();
+      toast('Отметката е добавена!');
+    });
+
     // Event Listeners
     document.getElementById('epubFile').addEventListener('change', (e) => {
       if (e.target.files.length) loadEpubFile(e.target.files[0], true);
@@ -523,6 +617,31 @@
     document.getElementById('bHist').addEventListener('click', () => {
       renderLibrary();
       document.getElementById('histPanel').style.display = 'flex';
+    });
+
+    document.getElementById('bFont').addEventListener('click', () => {
+      document.getElementById('fontPanel').style.display = 'flex';
+    });
+
+    document.getElementById('bNotes').addEventListener('click', () => {
+      renderNotes();
+      document.getElementById('notesPanel').style.display = 'flex';
+    });
+
+    // Font Size Handlers
+    document.getElementById('bFontInc').addEventListener('click', () => {
+      S.fontSize += 2;
+      document.documentElement.style.setProperty('--font-size', S.fontSize + 'px');
+    });
+
+    document.getElementById('bFontDec').addEventListener('click', () => {
+      if (S.fontSize > 12) S.fontSize -= 2;
+      document.documentElement.style.setProperty('--font-size', S.fontSize + 'px');
+    });
+
+    document.getElementById('fontSelect').addEventListener('change', (e) => {
+      S.fontFamily = e.target.value;
+      document.documentElement.style.setProperty('--font-family', S.fontFamily);
     });
 
     // Theme toggling
