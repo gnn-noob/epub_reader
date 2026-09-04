@@ -390,8 +390,29 @@ window.addEventListener('DOMContentLoaded',()=>{sopen=window.innerWidth>700;updS
 document.getElementById('bSidebar').addEventListener('click',()=>{sopen=!sopen;updSB();});
 document.getElementById('sOverlay').addEventListener('click',()=>{sopen=false;updSB();});
 function closePanels(){document.querySelectorAll('.fp').forEach(p=>p.classList.remove('open'));}
-['bBm','bNotes','bFont','bHist','bGS'].forEach(id=>{document.getElementById(id).addEventListener('click',()=>{if(id==='bBm'){const sel=window.getSelection();if(sel&&sel.rangeCount>0&&sel.toString().trim()){const range=sel.getRangeAt(0);S.pendingSel={snippet:sel.toString().trim().slice(0,120),selOff:range.startOffset,xpath:(()=>{try{return getXP(range.startContainer);}catch{return '';}})()};}else S.pendingSel=null;}const map={bBm:'bmPanel',bNotes:'ntPanel',bFont:'fontPanel',bHist:'histPanel',bGS:'gsPanel'};const p=document.getElementById(map[id]);const was=p.classList.contains('open');closePanels();if(!was){if(id==='bBm')renderBm();if(id==='bNotes')renderNt();if(id==='bHist')renderHist();p.classList.add('open');}});});
-['bmX','ntX','fontX','histX','gsX'].forEach(id=>document.getElementById(id).addEventListener('click',closePanels));
+['bBm','bNotes','bFont','bHist','bGS','bLib'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',()=>{
+    if(id==='bBm'){
+      const sel=window.getSelection();
+      if(sel&&sel.rangeCount>0&&sel.toString().trim()){
+        const range=sel.getRangeAt(0);
+        S.pendingSel={snippet:sel.toString().trim().slice(0,120),selOff:range.startOffset,xpath:(()=>{try{return getXP(range.startContainer);}catch{return '';}})()};
+      }else S.pendingSel=null;
+    }
+    const map={bBm:'bmPanel',bNotes:'ntPanel',bFont:'fontPanel',bHist:'histPanel',bGS:'gsPanel',bLib:'libPanel'};
+    const p=document.getElementById(map[id]);
+    const was=p.classList.contains('open');
+    closePanels();
+    if(!was){
+      if(id==='bBm')renderBm();
+      if(id==='bNotes')renderNt();
+      if(id==='bHist')renderHist();
+      if(id==='bLib')renderLib();
+      p.classList.add('open');
+    }
+  });
+});
+['bmX','ntX','fontX','histX','gsX','libX'].forEach(id=>document.getElementById(id).addEventListener('click',closePanels));
 const moreMenu=document.getElementById('moreMenu');
 document.getElementById('bMore').addEventListener('click',e=>{e.stopPropagation();moreMenu.style.display=moreMenu.style.display==='block'?'none':'block';});
 document.addEventListener('click',e=>{if(!moreMenu.contains(e.target)&&e.target.id!=='bMore')moreMenu.style.display='none';});
@@ -493,7 +514,6 @@ function renderLib() {
 }
 
 // 4. Закачане на събитията за отваряне/затваряне на новия панел
-document.getElementById('bLib').addEventListener('click', () => {
   const p = document.getElementById('libPanel');
   const was = p.classList.contains('open');
   closePanels();
