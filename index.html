@@ -2,371 +2,297 @@
 <html lang="bg">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>EPUB Reader Pro</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#121212">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPUB Reader</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
   <style>
     :root {
-      --bg: #121212;
-      --fg: #e0e0e0;
-      --card-bg: #1e1e1e;
-      --accent: #bb86fc;
-      --accent-hover: #9965f4;
-      --txm: #a0a0a0;
-      --border: #2c2c2c;
-      --font-family: system-ui, -apple-system, sans-serif;
+      --bg: #f5f2eb;
+      --panel-bg: #eae6df;
+      --text: #2c2c2b;
+      --accent: #1b5e55;
+      --accent-hover: #144740;
+      --border: #d8d3c9;
+      --card-bg: #ffffff;
       --font-size: 18px;
       --line-height: 1.6;
-      --side-margin: 15px;
+      --font-family: serif;
     }
 
-    [data-theme="light"] {
-      --bg: #f8f9fa;
-      --fg: #212529;
-      --card-bg: #ffffff;
-      --accent: #6200ee;
-      --accent-hover: #3700b3;
-      --txm: #6c757d;
-      --border: #dee2e6;
+    [data-theme="dark"] {
+      --bg: #1a1a1a;
+      --panel-bg: #242424;
+      --text: #e0e0e0;
+      --accent: #4db6ac;
+      --accent-hover: #80cbc4;
+      --border: #333333;
+      --card-bg: #2a2a2a;
     }
 
-    [data-theme="sepia"] {
-      --bg: #f4ecd8;
-      --fg: #5b4636;
-      --card-bg: #e9e0cc;
-      --accent: #8c6d46;
-      --accent-hover: #6d5231;
-      --txm: #7f6a56;
-      --border: #d3c4a9;
-    }
-
-    [data-theme="oled"] {
-      --bg: #000000;
-      --fg: #ffffff;
-      --card-bg: #0a0a0a;
-      --accent: #bb86fc;
-      --accent-hover: #9965f4;
-      --txm: #777777;
-      --border: #1a1a1a;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg);
-      color: var(--fg);
-      font-family: var(--font-family);
-      height: 100vh;
+      color: var(--text);
       display: flex;
       flex-direction: column;
+      height: 100vh;
       overflow: hidden;
-      transition: background-color 0.3s, color 0.3s;
     }
 
     header {
       height: 50px;
-      background: var(--card-bg);
+      background-color: var(--bg);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 10px;
+      padding: 0 15px;
       z-index: 10;
     }
 
-    .btn-icon {
-      background: none;
-      border: none;
-      color: var(--fg);
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      color: var(--accent);
       font-size: 1.1rem;
-      padding: 6px 8px;
-      cursor: pointer;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
       border-radius: 6px;
+      cursor: pointer;
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 0.9rem;
+      transition: all 0.2s;
     }
 
-    .btn-icon:active { background: rgba(255,255,255,0.1); }
+    .btn:hover { background-color: rgba(0,0,0,0.05); }
 
-    .nav-title {
-      font-size: 0.9rem;
+    .btn-primary {
+      background-color: var(--accent);
+      color: white;
+      border: none;
       font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 30vw;
+    }
+
+    .btn-primary:hover { background-color: var(--accent-hover); }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 90px);
+    }
+
+    sidebar {
+      width: 260px;
+      background-color: var(--panel-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+      gap: 15px;
+      overflow-y: auto;
+    }
+
+    .meta-box {
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meta-title { font-weight: bold; color: var(--text); }
+
+    .search-box {
+      display: flex;
+      gap: 4px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
     }
 
     #viewer {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px var(--side-margin);
-      max-width: 800px;
-      margin: 0 auto;
       width: 100%;
+      max-width: 750px;
       font-size: var(--font-size);
       line-height: var(--line-height);
+      font-family: var(--font-family);
     }
 
-    #viewer img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
-    #viewer a { color: var(--accent); text-decoration: none; }
+    #viewer img { max-width: 100%; height: auto; }
 
-    .empty-state {
-      height: 100%;
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      margin: auto;
+      max-width: 400px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      text-align: center;
       gap: 15px;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 0.95rem;
-      font-weight: 600;
       cursor: pointer;
     }
 
+    .drop-zone-icon {
+      font-size: 2rem;
+      color: var(--accent);
+    }
+
     footer {
-      height: 50px;
-      background: var(--card-bg);
+      height: 40px;
       border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 15px;
+      background-color: var(--bg);
     }
 
-    .panel {
+    /* Modals/Panels */
+    .modal {
       position: fixed;
-      top: 0; bottom: 0; left: 0; right: 0;
-      background: rgba(0,0,0,0.6);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
       display: none;
+      align-items: center;
+      justify-content: center;
       z-index: 100;
-      justify-content: flex-end;
     }
 
-    .panel-content {
-      width: 85%;
-      max-width: 380px;
+    .modal-content {
       background: var(--card-bg);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      box-shadow: -4px 0 15px rgba(0,0,0,0.5);
-    }
-
-    .panel-header {
-      padding: 12px 15px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .panel-body { flex: 1; overflow-y: auto; padding: 10px; }
-
-    .bi, .toc-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px;
-      border-bottom: 1px solid var(--border);
-      border-radius: 6px;
-      margin-bottom: 4px;
-      cursor: pointer;
-    }
-
-    .toc-item:hover, .bi:hover { background: rgba(255,255,255,0.05); }
-
-    .toast {
-      position: fixed;
-      bottom: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.85);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      z-index: 200;
-      display: none;
-    }
-
-    .ctrl-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 10px 0;
-    }
-
-    .ctrl-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    input[type="text"], select {
-      padding: 8px;
-      border-radius: 6px;
-      background: var(--bg);
-      color: var(--fg);
+      border-radius: 8px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
       border: 1px solid var(--border);
-      width: 100%;
     }
 
-    mark {
-      background-color: yellow;
-      color: black;
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .toc-item, .library-item {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .toc-item:hover, .library-item:hover {
+      background-color: rgba(0,0,0,0.05);
     }
   </style>
 </head>
 <body>
 
   <header>
-    <button class="btn-icon" id="bToc" title="Съдържание">☰</button>
-    <div class="nav-title" id="bookTitle">EPUB Reader Pro</div>
-    <div style="display: flex; gap: 2px;">
-      <button class="btn-icon" id="bSearch" title="Търсене">🔍</button>
-      <button class="btn-icon" id="bFont" title="Шрифт и изглед">Aa</button>
-      <button class="btn-icon" id="bNotes" title="Отметки">📝</button>
-      <button class="btn-icon" id="bHist" title="Последно четени / Библиотека">📚</button>
-      <button class="btn-icon" id="bTheme" title="Тема">☀️</button>
-      <button class="btn-icon" id="bFs" title="Цял екран">⛶</button>
+    <div class="brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+      EPUB
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Отвори</button>
+      <button class="btn" id="btnToc" title="Съдържание">☰</button>
+      <button class="btn" id="btnBookmarks" title="Отметки">🔖</button>
+      <button class="btn" id="btnNotes" title="Бележки">📝</button>
+      <button class="btn" id="btnFont" title="Шрифт">Aa</button>
+      <button class="btn" id="btnLibrary" title="Библиотека">📚</button>
+      <button class="btn" id="btnSearch" title="Търсене">🔍</button>
+      <button class="btn" id="btnTheme" title="Тема">☀️</button>
+      <button class="btn" id="btnFullscreen" title="Цял екран">⛶</button>
     </div>
   </header>
 
-  <main id="viewer">
-    <div class="empty-state" id="es">
-      <h2>Няма заредена книга</h2>
-      <p style="color: var(--txm); font-size: 0.9rem;">Изберете .epub файл от устройството си или отворете библиотеката.</p>
-      <button class="btn-primary" onclick="document.getElementById('epubFile').click()">Отвори книга</button>
-      <input type="file" id="epubFile" accept=".epub" style="display:none">
+  <div class="main-container">
+    <sidebar>
+      <div class="meta-box">
+        <span style="color: #888;">Заглавие</span>
+        <span class="meta-title" id="lblTitle">-</span>
+      </div>
+      <div class="meta-box">
+        <span style="color: #888;">Автор</span>
+        <span class="meta-title" id="lblAuthor">-</span>
+      </div>
+      <div class="search-box">
+        <input type="text" id="txtSearchChapter" placeholder="Търси в главата...">
+        <button class="btn" id="btnSearchChapter">🔍</button>
+      </div>
+      <div id="sidebarToc" style="margin-top: 10px; font-size: 0.85rem;"></div>
+    </sidebar>
+
+    <div class="content-area" id="contentArea">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-zone-icon">📖</div>
+        <div>Провлачи .epub тук или кликни</div>
+        <div style="font-size: 1.1rem; font-weight: bold; margin-top: 15px;">Локален EPUB четец</div>
+        <div style="font-size: 0.85rem; color: #777;">Работи изцяло в браузъра — данните ти остават при теб.</div>
+        <div style="font-size: 0.75rem; color: #999; margin-top: 10px;">← → клавиши или swipe за глави</div>
+      </div>
+      <div id="viewer" style="display: none;"></div>
     </div>
-  </main>
+  </div>
 
   <footer>
-    <button class="btn-icon" id="bPrev">◀ Предишна</button>
-    <span id="pInfo" style="font-size: 0.85rem; color: var(--txm);">- / -</span>
-    <button class="btn-icon" id="bNext">Следваща ▶</button>
+    <button class="btn" id="btnPrev">◀</button>
+    <span id="lblProgress" style="font-size: 0.85rem; color: #777;">-</span>
+    <button class="btn" id="btnNext">▶</button>
   </footer>
 
-  <!-- TOC Panel -->
-  <div class="panel" id="tocPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <h3>Съдържание</h3>
-        <button class="btn-icon" onclick="closePanels()">✕</button>
+  <input type="file" id="fileInput" accept=".epub" style="display: none;">
+
+  <!-- Modals -->
+  <div class="modal" id="modalLibrary">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Моята библиотека</h3>
+        <button class="btn" onclick="closeModals()">✕</button>
       </div>
-      <div class="panel-body" id="tocList"></div>
+      <div id="libraryList"></div>
     </div>
   </div>
-
-  <!-- Library Panel -->
-  <div class="panel" id="histPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <h3>Последно четени</h3>
-        <button class="btn-icon" onclick="closePanels()">✕</button>
-      </div>
-      <div style="padding: 10px 15px 0 15px;">
-        <button class="btn-primary" style="width: 100%; border-radius: 8px;" onclick="document.getElementById('epubFile').click()">+ Качи нова книга</button>
-      </div>
-      <div class="panel-body" id="histList"></div>
-    </div>
-  </div>
-
-  <!-- Search Panel -->
-  <div class="panel" id="searchPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <h3>Търсене в книгата</h3>
-        <button class="btn-icon" onclick="closePanels()">✕</button>
-      </div>
-      <div style="padding: 10px;">
-        <input type="text" id="searchInput" placeholder="Въведете дума или фраза...">
-        <button class="btn-primary" id="btnDoSearch" style="width: 100%; margin-top: 8px;">Търси</button>
-      </div>
-      <div class="panel-body" id="searchResults"></div>
-    </div>
-  </div>
-
-  <!-- Font Settings Panel -->
-  <div class="panel" id="fontPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <h3>Настройки на текста</h3>
-        <button class="btn-icon" onclick="closePanels()">✕</button>
-      </div>
-      <div class="panel-body">
-        <div class="ctrl-group">
-          <div class="ctrl-row">
-            <span>Размер на шрифта</span>
-            <div>
-              <button class="btn-icon" id="bFontDec" style="display:inline-block;">A-</button>
-              <button class="btn-icon" id="bFontInc" style="display:inline-block;">A+</button>
-            </div>
-          </div>
-          <div class="ctrl-row">
-            <span>Шрифт</span>
-            <select id="fontSelect">
-              <option value="system-ui, -apple-system, sans-serif">Sans-Serif (Системен)</option>
-              <option value="Georgia, serif">Georgia (Serif)</option>
-              <option value="'Times New Roman', serif">Times New Roman</option>
-              <option value="monospace">Monospace</option>
-            </select>
-          </div>
-          <div class="ctrl-row">
-            <span>Междуредие</span>
-            <select id="lineHeightSelect">
-              <option value="1.4">Стиснато (1.4)</option>
-              <option value="1.6" selected>Нормално (1.6)</option>
-              <option value="1.8">Широко (1.8)</option>
-            </select>
-          </div>
-          <div class="ctrl-row">
-            <span>Странични полета</span>
-            <select id="marginSelect">
-              <option value="10px">Малки</option>
-              <option value="20px" selected>Средни</option>
-              <option value="35px">Големи</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bookmarks Panel -->
-  <div class="panel" id="notesPanel">
-    <div class="panel-content">
-      <div class="panel-header">
-        <h3>Отметки</h3>
-        <button class="btn-icon" onclick="closePanels()">✕</button>
-      </div>
-      <div style="padding: 10px;">
-        <button class="btn-primary" id="bAddBookmark" style="width: 100%;">+ Добави отметка тук</button>
-      </div>
-      <div class="panel-body" id="notesList"></div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
 
   <script>
-    const S = {
+    const state = {
       zip: null,
       opfPath: '',
       rootPath: '',
@@ -374,17 +300,14 @@
       toc: [],
       curChapter: 0,
       meta: { title: '', author: '' },
-      bookKey: '',
-      fontSize: 18,
-      fontFamily: 'system-ui, -apple-system, sans-serif'
+      bookKey: ''
     };
 
     let DB = null;
 
-    // IndexedDB initialization
     function initDB() {
       return new Promise((resolve) => {
-        const req = indexedDB.open('epub_reader_db', 2);
+        const req = indexedDB.open('epub_original_db', 1);
         req.onupgradeneeded = (e) => {
           const db = e.target.result;
           if (!db.objectStoreNames.contains('books')) {
@@ -399,20 +322,15 @@
       });
     }
 
-    if (navigator.storage && navigator.storage.persist) {
-      navigator.storage.persist();
-    }
-
-    async function saveBookToDB(fileBlob, fileName) {
+    async function saveToDB(fileBlob, fileName) {
       if (!DB) await initDB();
       if (!DB) return;
       const tx = DB.transaction('books', 'readwrite');
       tx.objectStore('books').put({
-        k: S.bookKey,
-        title: S.meta.title || fileName,
-        author: S.meta.author || 'Неизвестен автор',
+        k: state.bookKey,
+        title: state.meta.title || fileName,
+        author: state.meta.author || 'Неизвестен',
         blob: fileBlob,
-        fileName: fileName,
         ts: Date.now()
       });
     }
@@ -422,362 +340,126 @@
         if (!DB) return resolve([]);
         const tx = DB.transaction('books', 'readonly');
         const req = tx.objectStore('books').getAll();
-        req.onsuccess = () => {
-          const items = req.result || [];
-          items.sort((a, b) => b.ts - a.ts);
-          resolve(items);
-        };
+        req.onsuccess = () => resolve(req.result || []);
         req.onerror = () => resolve([]);
       });
     }
 
-    function deleteBookFromDB(key) {
-      if (!DB) return;
-      const tx = DB.transaction('books', 'readwrite');
-      tx.objectStore('books').delete(key);
-    }
-
-    function toast(msg) {
-      const t = document.getElementById('toast');
-      t.innerText = msg;
-      t.style.display = 'block';
-      setTimeout(() => { t.style.display = 'none'; }, 2500);
-    }
-
-    function closePanels() {
-      document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
-    }
-
-    function esc(s) {
-      return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    function ago(ts) {
-      const d = Math.floor((Date.now() - ts) / 1000);
-      if (d < 60) return 'Току-що';
-      if (d < 3600) return Math.floor(d / 60) + ' мин.';
-      if (d < 86400) return Math.floor(d / 3600) + ' ч.';
-      return Math.floor(d / 86400) + ' дни';
-    }
-
-    async function renderLibrary() {
-      const el = document.getElementById('histList');
-      const items = await getStoredBooks();
-      
-      if (!items.length) {
-        el.innerHTML = '<div style="padding:15px; color:var(--txm); font-size:0.85rem;">Все още няма съхранени книги.</div>';
-        return;
-      }
-
-      el.innerHTML = '';
-      items.forEach(it => {
-        const d = document.createElement('div');
-        d.className = 'bi';
-        d.innerHTML = `
-          <div style="flex:1; cursor:pointer; overflow:hidden; padding-right:8px;">
-            <div style="font-weight:600; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${esc(it.title)}</div>
-            <div style="font-size:0.75rem; color:var(--txm);">${esc(it.author)} · ${ago(it.ts)}</div>
-          </div>
-          <button class="btn-icon hdel" style="color:var(--txm); font-size:0.9rem;">✕</button>
-        `;
-
-        d.querySelector('div').addEventListener('click', async () => {
-          closePanels();
-          if (it.blob) {
-            toast('Зареждане: ' + it.title + '…');
-            await loadEpubFile(it.blob, false);
-          } else {
-            toast('Грешка: Файлът липсва.');
-          }
-        });
-
-        d.querySelector('.hdel').addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteBookFromDB(it.k);
-          renderLibrary();
-          toast('Книгата е премахната.');
-        });
-
-        el.appendChild(d);
-      });
-    }
-
-    async function zt(path) {
-      const f = S.zip.file(path) || S.zip.file(S.rootPath + path);
-      if (!f) throw new Error('File not found in zip: ' + path);
-      return await f.async('string');
-    }
-
-    function pxml(str) {
-      return new DOMParser().parseFromString(str, 'application/xml');
-    }
-
-    function dn(path) {
-      const p = path.split('/');
-      p.pop();
-      return p.length ? p.join('/') + '/' : '';
-    }
-
-    async function loadEpubFile(file, isNew = true) {
-      if (!window.JSZip) { toast('JSZip липсва!'); return; }
-      toast('Зареждане…');
+    async function loadEpub(file, isNew = true) {
       try {
-        S.zip = await JSZip.loadAsync(file);
-        const contXml = await zt('META-INF/container.xml');
-        const rf = pxml(contXml).querySelector('rootfile');
-        if (!rf) throw new Error('Невалиден EPUB (no rootfile)');
+        state.zip = await JSZip.loadAsync(file);
+        const container = await state.zip.file("META-INF/container.xml").async("string");
+        const doc = new DOMParser().parseFromString(container, "application/xml");
+        state.opfPath = doc.querySelector("rootfile").getAttribute("full-path");
         
-        S.opfPath = rf.getAttribute('full-path');
-        S.rootPath = dn(S.opfPath);
-        const opf = pxml(await zt(S.opfPath));
+        const p = state.opfPath.split('/');
+        p.pop();
+        state.rootPath = p.length ? p.join('/') + '/' : '';
 
-        const titleEl = opf.querySelector('title');
-        const creatorEl = opf.querySelector('creator');
-        S.meta.title = titleEl ? titleEl.textContent : 'Без заглавие';
-        S.meta.author = creatorEl ? creatorEl.textContent : 'Неизвестен';
+        const opfStr = await state.zip.file(state.opfPath).async("string");
+        const opfDoc = new DOMParser().parseFromString(opfStr, "application/xml");
 
-        const manifestMap = {};
-        opf.querySelectorAll('manifest > item').forEach(it => {
-          manifestMap[it.getAttribute('id')] = it.getAttribute('href');
+        const t = opfDoc.querySelector("title");
+        const c = opfDoc.querySelector("creator");
+        state.meta.title = t ? t.textContent : file.name;
+        state.meta.author = c ? c.textContent : "Неизвестен";
+
+        document.getElementById("lblTitle").innerText = state.meta.title;
+        document.getElementById("lblAuthor").innerText = state.meta.author;
+
+        const manifest = {};
+        opfDoc.querySelectorAll("manifest > item").forEach(it => {
+          manifest[it.getAttribute("id")] = it.getAttribute("href");
         });
 
-        S.spine = [];
-        opf.querySelectorAll('spine > itemref').forEach(ref => {
-          const id = ref.getAttribute('idref');
-          if (manifestMap[id]) S.spine.push(S.rootPath + manifestMap[id]);
+        state.spine = [];
+        opfDoc.querySelectorAll("spine > itemref").forEach(ref => {
+          const id = ref.getAttribute("idref");
+          if (manifest[id]) state.spine.push(state.rootPath + manifest[id]);
         });
-
-        // Parse TOC
-        S.toc = [];
-        const navItem = opf.querySelector('item[properties~="nav"]') || opf.querySelector('item[id="ncx"]');
-        if (navItem) {
-          try {
-            const tocPath = S.rootPath + navItem.getAttribute('href');
-            const tocXml = pxml(await zt(tocPath));
-            tocXml.querySelectorAll('navMap > navPoint, nav#toc li').forEach((el, idx) => {
-              const label = el.querySelector('navLabel > text, a')?.textContent || `Глава ${idx + 1}`;
-              S.toc.push({ label, src: idx });
-            });
-          } catch(e) {}
-        }
 
         let h = 0;
-        const s = S.meta.title + '|' + S.meta.author;
+        const s = state.meta.title + state.meta.author;
         for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-        S.bookKey = 'bk_' + (h >>> 0).toString(36);
+        state.bookKey = 'bk_' + (h >>> 0).toString(36);
 
         if (isNew) {
-          await saveBookToDB(file, file.name || S.meta.title);
+          await saveToDB(file, file.name);
         }
 
-        document.getElementById('bookTitle').innerText = S.meta.title;
-        document.getElementById('es').style.display = 'none';
+        document.getElementById("dropZone").style.display = "none";
+        document.getElementById("viewer").style.display = "block";
 
-        renderToc();
-
-        const savedPos = localStorage.getItem('pos_' + S.bookKey);
-        const startChapter = savedPos ? parseInt(savedPos, 10) : 0;
-        await renderChapter(startChapter);
-
-      } catch (err) {
-        console.error(err);
-        toast('Грешка при отваряне!');
+        renderChapter(0);
+      } catch (e) {
+        alert("Грешка при зареждане на книгата!");
+        console.error(e);
       }
-    }
-
-    function renderToc() {
-      const el = document.getElementById('tocList');
-      el.innerHTML = '';
-      if (!S.spine.length) return;
-
-      const list = S.toc.length ? S.toc : S.spine.map((_, i) => ({ label: `Глава ${i + 1}`, src: i }));
-      list.forEach((item, idx) => {
-        const d = document.createElement('div');
-        d.className = 'toc-item';
-        d.innerText = item.label;
-        d.addEventListener('click', () => {
-          renderChapter(typeof item.src === 'number' ? item.src : idx);
-          closePanels();
-        });
-        el.appendChild(d);
-      });
     }
 
     async function renderChapter(idx) {
-      if (idx < 0 || idx >= S.spine.length) return;
-      S.curChapter = idx;
-      localStorage.setItem('pos_' + S.bookKey, idx);
+      if (idx < 0 || idx >= state.spine.length) return;
+      state.curChapter = idx;
+      
+      const fileStr = await state.zip.file(state.spine[idx]).async("string");
+      const doc = new DOMParser().parseFromString(fileStr, "text/html");
 
-      const path = S.spine[idx];
-      let html = await zt(path);
-
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const imgs = doc.querySelectorAll('img');
+      const imgs = doc.querySelectorAll("img");
       for (let img of imgs) {
-        let src = img.getAttribute('src');
-        if (src && !src.startsWith('http')) {
+        let src = img.getAttribute("src");
+        if (src && !src.startsWith("http")) {
           try {
-            const imgPath = S.rootPath + src;
-            const imgFile = S.zip.file(imgPath);
-            if (imgFile) {
-              const b64 = await imgFile.async('base64');
-              img.setAttribute('src', 'data:image/png;base64,' + b64);
-            }
-          } catch (e) {}
+            const imgPath = state.rootPath + src;
+            const b64 = await state.zip.file(imgPath).async("base64");
+            img.setAttribute("src", "data:image/png;base64," + b64);
+          } catch(e){}
         }
       }
 
-      const viewer = document.getElementById('viewer');
-      viewer.innerHTML = doc.body.innerHTML;
-      viewer.scrollTop = 0;
-
-      document.getElementById('pInfo').innerText = `${S.curChapter + 1} / ${S.spine.length}`;
+      document.getElementById("viewer").innerHTML = doc.body.innerHTML;
+      document.getElementById("contentArea").scrollTop = 0;
+      document.getElementById("lblProgress").innerText = `${idx + 1} / ${state.spine.length}`;
     }
 
-    // Search Feature
-    document.getElementById('btnDoSearch').addEventListener('click', async () => {
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      const resEl = document.getElementById('searchResults');
-      if (!q) return;
-      resEl.innerHTML = '<div style="padding:10px; color:var(--txm);">Търсене...</div>';
-
-      let results = [];
-      for (let i = 0; i < S.spine.length; i++) {
-        try {
-          const html = await zt(S.spine[i]);
-          const text = pxml(html).body?.textContent || '';
-          if (text.toLowerCase().includes(q)) {
-            results.push({ ch: i, text: text.substr(text.toLowerCase().indexOf(q), 60) });
-          }
-        } catch(e) {}
-      }
-
-      if (!results.length) {
-        resEl.innerHTML = '<div style="padding:10px; color:var(--txm);">Няма намерени резултати.</div>';
-        return;
-      }
-
-      resEl.innerHTML = '';
-      results.forEach(r => {
-        const d = document.createElement('div');
-        d.className = 'bi';
-        d.innerHTML = `<div><strong>Глава ${r.ch + 1}</strong>: ...${esc(r.text)}...</div>`;
-        d.addEventListener('click', () => {
-          renderChapter(r.ch);
-          closePanels();
-        });
-        resEl.appendChild(d);
-      });
+    // Drag & Drop
+    const dz = document.getElementById("dropZone");
+    dz.addEventListener("dragover", (e) => e.preventDefault());
+    dz.addEventListener("drop", (e) => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) loadEpub(e.dataTransfer.files[0], true);
     });
 
-    // Bookmarks
-    function renderNotes() {
-      const el = document.getElementById('notesList');
-      const bm = JSON.parse(localStorage.getItem('bm_' + S.bookKey) || '[]');
-      if (!bm.length) {
-        el.innerHTML = '<div style="padding:15px; color:var(--txm); font-size:0.85rem;">Няма запазени отметки.</div>';
-        return;
-      }
-      el.innerHTML = '';
-      bm.forEach((item, index) => {
-        const d = document.createElement('div');
-        d.className = 'bi';
-        d.innerHTML = `
-          <div style="flex:1; cursor:pointer;" onclick="renderChapter(${item.ch}); closePanels();">
-            <div style="font-weight:600; font-size:0.85rem;">Глава ${item.ch + 1}</div>
-            <div style="font-size:0.75rem; color:var(--txm);">${item.date}</div>
-          </div>
-          <button class="btn-icon" onclick="deleteBookmark(${index})" style="color:var(--txm); font-size:0.9rem;">✕</button>
-        `;
-        el.appendChild(d);
-      });
-    }
-
-    function deleteBookmark(idx) {
-      const bm = JSON.parse(localStorage.getItem('bm_' + S.bookKey) || '[]');
-      bm.splice(idx, 1);
-      localStorage.setItem('bm_' + S.bookKey, JSON.stringify(bm));
-      renderNotes();
-    }
-
-    document.getElementById('bAddBookmark').addEventListener('click', () => {
-      if (!S.bookKey) return;
-      const bm = JSON.parse(localStorage.getItem('bm_' + S.bookKey) || '[]');
-      bm.push({ ch: S.curChapter, date: new Date().toLocaleDateString('bg-BG') });
-      localStorage.setItem('bm_' + S.bookKey, JSON.stringify(bm));
-      renderNotes();
-      toast('Отметката е добавена!');
+    document.getElementById("fileInput").addEventListener("change", (e) => {
+      if (e.target.files.length) loadEpub(e.target.files[0], true);
     });
 
-    // Event Listeners
-    document.getElementById('epubFile').addEventListener('change', (e) => {
-      if (e.target.files.length) loadEpubFile(e.target.files[0], true);
-    });
+    document.getElementById("btnPrev").addEventListener("click", () => renderChapter(state.curChapter - 1));
+    document.getElementById("btnNext").addEventListener("click", () => renderChapter(state.curChapter + 1));
 
-    document.getElementById('bPrev').addEventListener('click', () => renderChapter(S.curChapter - 1));
-    document.getElementById('bNext').addEventListener('click', () => renderChapter(S.curChapter + 1));
-
-    document.getElementById('bToc').addEventListener('click', () => {
-      document.getElementById('tocPanel').style.display = 'flex';
-    });
-
-    document.getElementById('bHist').addEventListener('click', () => {
-      renderLibrary();
-      document.getElementById('histPanel').style.display = 'flex';
-    });
-
-    document.getElementById('bSearch').addEventListener('click', () => {
-      document.getElementById('searchPanel').style.display = 'flex';
-    });
-
-    document.getElementById('bFont').addEventListener('click', () => {
-      document.getElementById('fontPanel').style.display = 'flex';
-    });
-
-    document.getElementById('bNotes').addEventListener('click', () => {
-      renderNotes();
-      document.getElementById('notesPanel').style.display = 'flex';
-    });
-
-    // Controls
-    document.getElementById('bFontInc').addEventListener('click', () => {
-      S.fontSize += 2;
-      document.documentElement.style.setProperty('--font-size', S.fontSize + 'px');
-    });
-
-    document.getElementById('bFontDec').addEventListener('click', () => {
-      if (S.fontSize > 12) S.fontSize -= 2;
-      document.documentElement.style.setProperty('--font-size', S.fontSize + 'px');
-    });
-
-    document.getElementById('fontSelect').addEventListener('change', (e) => {
-      S.fontFamily = e.target.value;
-      document.documentElement.style.setProperty('--font-family', S.fontFamily);
-    });
-
-    document.getElementById('lineHeightSelect').addEventListener('change', (e) => {
-      document.documentElement.style.setProperty('--line-height', e.target.value);
-    });
-
-    document.getElementById('marginSelect').addEventListener('change', (e) => {
-      document.documentElement.style.setProperty('--side-margin', e.target.value);
-    });
-
-    const themes = ['dark', 'light', 'sepia', 'oled'];
-    let curThemeIdx = 0;
-    document.getElementById('bTheme').addEventListener('click', () => {
-      curThemeIdx = (curThemeIdx + 1) % themes.length;
-      document.documentElement.setAttribute('data-theme', themes[curThemeIdx]);
-      toast('Тема: ' + themes[curThemeIdx]);
-    });
-
-    document.getElementById('bFs').addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+    document.getElementById("btnLibrary").addEventListener("click", async () => {
+      const list = await getStoredBooks();
+      const el = document.getElementById("libraryList");
+      el.innerHTML = "";
+      if (!list.length) {
+        el.innerHTML = "<div style='padding:10px;'>Няма запазени книги.</div>";
       } else {
-        document.exitFullscreen().catch(() => {});
+        list.forEach(b => {
+          const item = document.createElement("div");
+          item.className = "library-item";
+          item.innerText = `${b.title} (${b.author})`;
+          item.onclick = () => {
+            loadEpub(b.blob, false);
+            closeModals();
+          };
+          el.appendChild(item);
+        });
       }
+      document.getElementById("modalLibrary").style.display = "flex";
     });
+
+    function closeModals() {
+      document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
+    }
 
     initDB();
   </script>
