@@ -43,12 +43,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:var(
     left: 0 !important;
     width: 80vw !important;
     max-width: 320px !important;
-    height: 100% !important; /* Използваме 100% вместо dvh, за да не се свива внезапно */
+    height: 100vh !important;
     display: none;
     box-shadow: 4px 0 20px rgba(0,0,0,0.4);
     z-index: 99999 !important;
     background: var(--bg);
-    overflow-y: auto; /* Само вътрешността скролира */
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
   #sidebar.open{
@@ -61,8 +61,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:var(
 .mb strong{display:block;color:var(--tx);font-size:.88rem;line-height:1.3;}
 #bkCoverWrap{display:none;width:100%;max-height:140px;margin-bottom:.5rem;overflow:hidden;border-radius:6px;border:1px solid var(--bd);}
 #bkCoverWrap img{width:100%;height:100%;object-fit:cover;}
-#sbox{padding:.5rem;border-bottom:1px solid var(--bd);display:flex;gap:.3rem;width:100%;box-sizing:border-box;align-items:center;}
-#sbox{padding:.5rem;border-bottom:1px solid var(--bd);display:flex;gap:.3rem;align-items:center;position:relative;}
+#sbox{padding:.5rem;border-bottom:1px solid var(--bd);display:flex;gap:.3rem;width:100%;box-sizing:border-box;align-items:center;position:relative;}
 #si{flex:1;min-width:0;border:1px solid var(--bd);border-radius:6px;padding:.4rem 2.2rem .4rem .65rem;font:inherit;font-size:.84rem;background:var(--bg);color:var(--tx);outline:none;min-height:42px;}
 #sClr{position:absolute;right:3.8rem;background:transparent;border:none;color:var(--txm);cursor:pointer;padding:0.5rem;font-size:1rem;}
 #tocWrap{flex:1;overflow-y:auto;padding:.3rem;-webkit-overflow-scrolling:touch;}
@@ -242,7 +241,7 @@ mark.hl{background:var(--hl);border-radius:2px;}
     </div>
     <div id="sbox">
       <input id="si" type="search" placeholder="Търси в главата..."/>
-      <button class="ib" id="sSrch">&#128269;</button>
+      <button class="ib" id="bSrch">&#128269;</button>
       <button class="ib" id="sClr" style="display:none">&#10005;</button>
     </div>
     <div id="tocWrap"></div>
@@ -284,7 +283,6 @@ mark.hl{background:var(--hl);border-radius:2px;}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
-      // Принудителна проверка за нова версия на кода при всяко отваряне
       reg.update();
     }).catch(()=>{});
   });
@@ -348,7 +346,17 @@ document.getElementById('fontOpts')?.addEventListener('click',e=>{const b=e.targ
 document.querySelectorAll('.fb[data-rw]').forEach(b=>b.addEventListener('click',()=>{S.readWidth=b.dataset.rw;if(!S.pageMode)applyTypo();saveGlobal();}));
 document.getElementById('bJustify')?.addEventListener('click',()=>{S.justify=!S.justify;applyTypo();saveGlobal();});
 document.getElementById('bPageMode')?.addEventListener('click',()=>{S.pageMode=!S.pageMode;applyTypo();if(S.pageMode)setupPageMode();else teardownPageMode();saveGlobal();toast(S.pageMode?'Режим: Страница':'Режим: Скрол');});
-window.addEventListener('resize',()=>{sopen=window.innerWidth>700;updSB();if(S.pageMode)setupPageMode();});
+
+// ИЗКЛЮЧИТЕЛНО ВАЖНО: Игнорираме resize събитията при отваряне на клавиатура (ако се променя само височината)
+let lastInnerWidth = window.innerWidth;
+window.addEventListener('resize',()=>{
+  if (window.innerWidth !== lastInnerWidth) {
+    lastInnerWidth = window.innerWidth;
+    sopen=window.innerWidth>700;
+    updSB();
+    if(S.pageMode)setupPageMode();
+  }
+});
 
 function toggleFS(){
   const isFs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);
@@ -491,10 +499,9 @@ window.addEventListener('DOMContentLoaded',()=>{
     reader.addEventListener('drop',async e=>{e.preventDefault();document.getElementById('dz')?.classList.remove('drag');const f=e.dataTransfer.files?.[0];if(f&&/\.epub$/i.test(f.name))await openEpub(f);});
   }
 
-  // --- ЖЕЛЕЗНА ЗАЩИТА НА СТРАНИЧНИЯ ПАНЕЛ И ТЪРСАЧКАТА ---
+  // --- АБСОЛЮТНА ИЗОЛАЦИЯ И ЗАЩИТА НА СТРАНИЧНИЯ ПАНЕЛ И ТЪРСАЧКАТА ---
   const sidebar = document.getElementById('sidebar');
   if (sidebar) {
-    // Спираме изтичането на всякакви кликове/докосвания извън панела
     ['click', 'touchstart', 'touchend', 'pointerdown'].forEach(evt => {
       sidebar.addEventListener(evt, (e) => {
         e.stopPropagation();
@@ -504,9 +511,13 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   const searchInput = document.getElementById('si');
   if (searchInput) {
-    ['touchstart', 'touchend', 'click', 'focus'].forEach(evt => {
+    ['touchstart', 'touchend', 'click', 'focus', 'blur'].forEach(evt => {
       searchInput.addEventListener(evt, (e) => {
         e.stopPropagation();
+        if (evt === 'blur') {
+          // Забраняваме на браузъра да премахва фокуса при скрит софтуерен рефлоу
+          if (document.activeElement === searchInput) e.preventDefault();
+        }
       });
     });
 
