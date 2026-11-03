@@ -481,12 +481,21 @@ window.addEventListener('DOMContentLoaded',()=>{
     reader.addEventListener('drop',async e=>{e.preventDefault();document.getElementById('dz')?.classList.remove('drag');const f=e.dataTransfer.files?.[0];if(f&&/\.epub$/i.test(f.name))await openEpub(f);});
   }
 
-  // Защита на мобилна клавиатура в търсачката
-  const searchInput=document.getElementById('si');
-  if(searchInput){
-    searchInput.addEventListener('touchstart',(e)=>{e.stopPropagation();},{passive:true});
-    searchInput.addEventListener('click',(e)=>{e.stopPropagation();});
-    searchInput.addEventListener('focus',()=>{setTimeout(()=>{window.scrollTo(0,0);},100);});
+// Усилена защита на мобилна клавиатура в търсачката
+  const searchInput = document.getElementById('si');
+  if (searchInput) {
+    searchInput.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+    searchInput.addEventListener('click', (e) => { e.stopPropagation(); });
+    searchInput.addEventListener('focus', (e) => {
+      e.stopPropagation();
+      setTimeout(() => { window.scrollTo(0, 0); }, 50);
+    });
+    // Предотвратява софтуерното затваряне на клавиатурата от браузъра при рефлоу
+    searchInput.addEventListener('blur', (e) => {
+      if (document.activeElement === searchInput) {
+        e.preventDefault();
+      }
+    });
   }
 
   document.getElementById('dz')?.addEventListener('click',()=>document.getElementById('epubFile')?.click());
