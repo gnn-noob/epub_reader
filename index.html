@@ -283,7 +283,10 @@ mark.hl{background:var(--hl);border-radius:2px;}
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // Принудителна проверка за нова версия на кода при всяко отваряне
+      reg.update();
+    }).catch(()=>{});
   });
 }
 
@@ -467,6 +470,7 @@ function updSB(){
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
+
   sopen=window.innerWidth>700;
   updSB();
   applyTypo();
@@ -487,17 +491,23 @@ window.addEventListener('DOMContentLoaded',()=>{
     reader.addEventListener('drop',async e=>{e.preventDefault();document.getElementById('dz')?.classList.remove('drag');const f=e.dataTransfer.files?.[0];if(f&&/\.epub$/i.test(f.name))await openEpub(f);});
   }
 
-// Надеждна защита за полето за търсене на мобилни
-  const searchInput = document.getElementById('si');
+  // --- ЖЕЛЕЗНА ЗАЩИТА НА СТРАНИЧНИЯ ПАНЕЛ И ТЪРСАЧКАТА ---
   const sidebar = document.getElementById('sidebar');
-  
+  if (sidebar) {
+    // Спираме изтичането на всякакви кликове/докосвания извън панела
+    ['click', 'touchstart', 'touchend', 'pointerdown'].forEach(evt => {
+      sidebar.addEventListener(evt, (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    });
+  }
+
+  const searchInput = document.getElementById('si');
   if (searchInput) {
-    searchInput.addEventListener('touchstart', (e) => {
-      e.stopPropagation();
-    }, { passive: true });
-    
-    searchInput.addEventListener('click', (e) => {
-      e.stopPropagation();
+    ['touchstart', 'touchend', 'click', 'focus'].forEach(evt => {
+      searchInput.addEventListener(evt, (e) => {
+        e.stopPropagation();
+      });
     });
 
     searchInput.addEventListener('focus', () => {
@@ -508,6 +518,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       }
     });
   }
+  // --------------------------------------------------------
 
   document.getElementById('dz')?.addEventListener('click',()=>document.getElementById('epubFile')?.click());
   document.getElementById('epubFile')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(f)await openEpub(f);e.target.value='';});
@@ -520,7 +531,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   
   const moreMenu=document.getElementById('moreMenu');
   document.getElementById('bMore')?.addEventListener('click',e=>{e.stopPropagation();if(moreMenu)moreMenu.style.display=moreMenu.style.display==='block'?'none':'block';});
-  document.addEventListener('click',e=>{if(moreMenu&&!moreMenu.contains(e.target)&&e.target.id!=='bMore')moreMenu.style.display='none';});
+  document.addEventListener('click',e=>{if(e.target.closest('#sidebar'))return;if(!moreMenu.contains(e.target)&&e.target.id!=='bMore')moreMenu.style.display='none';});
   ['mBm','mNotes','mHist','mGS'].forEach(id=>{document.getElementById(id)?.addEventListener('click',()=>{if(moreMenu)moreMenu.style.display='none';const map={mBm:'bBm',mNotes:'bNotes',mHist:'bHist',mGS:'bGS'};document.getElementById(map[id])?.click();});});
 
   document.getElementById('bmAdd')?.addEventListener('click',()=>{if(!S.spine.length)return;const lbl=S.toc[S.cur]?.label||('Глава '+(S.cur+1));const ps=S.pendingSel;const entry={id:Date.now(),i:S.cur,l:lbl,bk:S.bookKey,snippet:ps?.snippet||null,xpath:ps?.xpath||null,selOff:ps?.selOff||0,st:document.getElementById('reader')?.scrollTop||0,pg:PAGE};S.bm.push(entry);saveGlobal();renderBm();toast(ps?.snippet?'"'+ps.snippet.slice(0,30)+'…"':lbl);S.pendingSel=null;});
