@@ -347,7 +347,6 @@ document.querySelectorAll('.fb[data-rw]').forEach(b=>b.addEventListener('click',
 document.getElementById('bJustify')?.addEventListener('click',()=>{S.justify=!S.justify;applyTypo();saveGlobal();});
 document.getElementById('bPageMode')?.addEventListener('click',()=>{S.pageMode=!S.pageMode;applyTypo();if(S.pageMode)setupPageMode();else teardownPageMode();saveGlobal();toast(S.pageMode?'Режим: Страница':'Режим: Скрол');});
 
-// ИЗКЛЮЧИТЕЛНО ВАЖНО: Игнорираме resize събитията при отваряне на клавиатура (ако се променя само височината)
 let lastInnerWidth = window.innerWidth;
 window.addEventListener('resize',()=>{
   if (window.innerWidth !== lastInnerWidth) {
@@ -499,7 +498,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     reader.addEventListener('drop',async e=>{e.preventDefault();document.getElementById('dz')?.classList.remove('drag');const f=e.dataTransfer.files?.[0];if(f&&/\.epub$/i.test(f.name))await openEpub(f);});
   }
 
-  // --- АБСОЛЮТНА ИЗОЛАЦИЯ И ЗАЩИТА НА СТРАНИЧНИЯ ПАНЕЛ И ТЪРСАЧКАТА ---
   const sidebar = document.getElementById('sidebar');
   if (sidebar) {
     ['click', 'touchstart', 'touchend', 'pointerdown'].forEach(evt => {
@@ -515,7 +513,6 @@ window.addEventListener('DOMContentLoaded',()=>{
       searchInput.addEventListener(evt, (e) => {
         e.stopPropagation();
         if (evt === 'blur') {
-          // Забраняваме на браузъра да премахва фокуса при скрит софтуерен рефлоу
           if (document.activeElement === searchInput) e.preventDefault();
         }
       });
@@ -528,8 +525,19 @@ window.addEventListener('DOMContentLoaded',()=>{
         if (ov) ov.classList.add('show');
       }
     });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doSearch();
+      }
+    });
   }
-  // --------------------------------------------------------
+
+  document.getElementById('bSrch')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    doSearch();
+  });
 
   document.getElementById('dz')?.addEventListener('click',()=>document.getElementById('epubFile')?.click());
   document.getElementById('epubFile')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(f)await openEpub(f);e.target.value='';});
@@ -547,8 +555,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   document.getElementById('bmAdd')?.addEventListener('click',()=>{if(!S.spine.length)return;const lbl=S.toc[S.cur]?.label||('Глава '+(S.cur+1));const ps=S.pendingSel;const entry={id:Date.now(),i:S.cur,l:lbl,bk:S.bookKey,snippet:ps?.snippet||null,xpath:ps?.xpath||null,selOff:ps?.selOff||0,st:document.getElementById('reader')?.scrollTop||0,pg:PAGE};S.bm.push(entry);saveGlobal();renderBm();toast(ps?.snippet?'"'+ps.snippet.slice(0,30)+'…"':lbl);S.pendingSel=null;});
   document.getElementById('ntSave')?.addEventListener('click',()=>{const t=document.getElementById('ntA')?.value.trim();if(!t)return;if(!S.notes[S.cur])S.notes[S.cur]=[];S.notes[S.cur].push({t,l:S.toc[S.cur]?.label||('Глава '+(S.cur+1)),d:new Date().toLocaleDateString('bg')});const ntA=document.getElementById('ntA');if(ntA)ntA.value='';saveGlobal();renderNt();toast('Запазена!');});
-  document.getElementById('sSrch')?.addEventListener('click',doSearch);
-  document.getElementById('si')?.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
   document.getElementById('sClr')?.addEventListener('click',()=>{const si=document.getElementById('si');if(si)si.value='';const sClr=document.getElementById('sClr');if(sClr)sClr.style.display='none';clearHL();});
   document.getElementById('gsBtn')?.addEventListener('click',doGS);
   document.getElementById('gsInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')doGS();});
