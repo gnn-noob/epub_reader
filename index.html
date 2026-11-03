@@ -286,6 +286,9 @@ const S={zip:null,spine:[],toc:[],manifest:new Map(),rootPath:'',opfPath:'',tocP
 let PAGE=0,PAGES=1,saveTimer=null;
 const GSC={};
 const reader=document.getElementById('reader');
+// Защита на мобилния панел при отваряне на виртуална клавиатура в търсачката
+document.getElementById('si').addEventListener('touchstart', e => e.stopPropagation());
+document.getElementById('si').addEventListener('click', e => e.stopPropagation());
 const chapter=document.getElementById('chapter');
 const LS={get:(k,fb=null)=>{try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):fb;}catch{return fb;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}}};
 function saveGlobal(){LS.set('e23th',S.theme);LS.set('e23sc',S.scale);LS.set('e23lh',S.lineHeight);LS.set('e23rf',S.readFont);LS.set('e23rw',S.readWidth);LS.set('e23ju',S.justify);LS.set('e23pm',S.pageMode);LS.set('e23bm',S.bm);LS.set('e23nt',S.notes);}
