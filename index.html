@@ -35,10 +35,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:var(
 #app{flex:1;display:flex;min-height:0;position:relative;overflow:hidden;}
 #sOverlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:40;}
 #sOverlay.show{display:block!important;}
-#sidebar{width:260px;flex-shrink:0;display:flex;flex-direction:column;background:var(--sf);border-right:1px solid var(--bd);z-index:45;transition:transform .25s ease;}
+#sidebar{width:260px;flex-shrink:0;display:flex;flex-direction:column;background:var(--sf);border-right:1px solid var(--bd);z-index:45;transition:transform .25s ease, visibility .25s;}
 @media(max-width:700px){
-  #sidebar{position:absolute;top:0;bottom:0;left:0;transform:translateX(-100%);box-shadow:4px 0 20px rgba(0,0,0,0.4);}
-  #sidebar.open{transform:translateX(0);}
+  #sidebar{
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    transform:translateX(-105%); /* Издърпва и дясната рамка извън екрана */
+    box-shadow:none;
+    visibility:hidden; /* Скрива напълно панела и рамката му, когато е затворен */
+  }
+  #sidebar.open{
+    transform:translateX(0);
+    box-shadow:4px 0 20px rgba(0,0,0,0.4);
+    visibility:visible;
+  }
 }
 @media(min-width:701px){#sidebar.off{width:0;overflow:hidden;border:none;}}
 .mb{padding:.8rem .9rem;border-bottom:1px solid var(--bd);font-size:.8rem;color:var(--txm);display:flex;flex-direction:column;gap:.3rem;}
